@@ -51,7 +51,8 @@ void sendUpstreamMsgToServer(void **resp_bytes, size_t resp_size)
 int sendMsgtoRegisteredClients(char *dest,const void *recivedMsg,size_t msgSize)
 {
 	UNUSED(dest); UNUSED(recivedMsg);UNUSED(msgSize);
-	return 0;
+        function_called();
+        return (int) mock();
 }
 
 int get_numOfClients()
@@ -113,10 +114,8 @@ void test_listenerOnMessage()
     expect_function_call(get_numOfClients);
     will_return(validate_partner_id, 1);
     expect_function_call(validate_partner_id);
-    will_return(get_global_node, (intptr_t)head);
-    expect_function_call(get_global_node);
-    will_return(nn_send, 20);
-    expect_function_calls(nn_send, 1);
+    expect_function_call(sendMsgtoRegisteredClients);
+    will_return(sendMsgtoRegisteredClients, 1);
 
     listenerOnMessage("Hello", 6);
     free(head);
@@ -148,11 +147,8 @@ void test_listenerOnMessageMultipleClients()
     expect_function_call(get_numOfClients);
     will_return(validate_partner_id, 0);
     expect_function_call(validate_partner_id);
-    will_return(get_global_node, (intptr_t)head);
-    expect_function_call(get_global_node);
-    will_return(nn_send, 20);
-    expect_function_calls(nn_send, 1);
-
+    expect_function_call(sendMsgtoRegisteredClients);
+    will_return(sendMsgtoRegisteredClients, 1);
     listenerOnMessage("Hello", 6);
     free(head1);
     free(head2);
@@ -176,8 +172,8 @@ void err_listenerOnMessageServiceUnavailable()
     expect_function_call(get_numOfClients);
     will_return(validate_partner_id, 0);
     expect_function_call(validate_partner_id);
-    will_return(get_global_node, (intptr_t)NULL);
-    expect_function_call(get_global_node);
+    expect_function_call(sendMsgtoRegisteredClients);
+    will_return(sendMsgtoRegisteredClients, 0);
     expect_function_call(sendUpstreamMsgToServer);
     
     listenerOnMessage("Hello", 6);
