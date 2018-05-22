@@ -145,7 +145,7 @@ void test_delete_client_subscriptions()
     delete_client_subscriptions(&data);
     assert_true(1 == data.delete_count && 1 == data.hit_count);
     free(data.service_name);
-    
+  
     assert_int_equal(0, (int)rebar_ll_count(get_global_subscription_list()));
 }
 
