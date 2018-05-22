@@ -238,7 +238,7 @@ target_link_libraries (test_config -lcmocka
 #-------------------------------------------------------------------------------
 add_test(NAME test_upstream COMMAND ${MEMORY_CHECK} ./test_upstream)
 add_executable(test_upstream test_upstream.c ../src/upstream.c ../src/string_helpers.c ../src/peer2peer.c
- ../src/parodus_interface.c ../src/subscription.c)
+ ../src/parodus_interface.c)
 target_link_libraries (test_upstream -lcmocka ${PARODUS_COMMON_LIBS} -lrebar-c)
 
 #-------------------------------------------------------------------------------
@@ -405,3 +405,10 @@ target_link_libraries (test_parodus_interface_ps ${PARODUS_COMMON_LIBS})
 add_test(NAME test_subscription COMMAND ${MEMORY_CHECK} ./test_subscription)
 add_executable(test_subscription test_subscription.c ../src/subscription.c)
  target_link_libraries (test_subscription -lcmocka -Wl,--no-as-needed -lcimplog -lcjson -lrebar-c -ltrower-base64 -lssl -lcrypto -lrt -lm -lwrp-c -lmsgpackc)
+ 
+ #-------------------------------------------------------------------------------
+#   test_peer2peer
+#-------------------------------------------------------------------------------
+add_test(NAME test_peer2peer COMMAND ${MEMORY_CHECK} ./test_peer2peer)
+add_executable(test_peer2peer test_peer2peer.c ../src/peer2peer.c)
+ target_link_libraries (test_peer2peer -lcmocka -Wl,--no-as-needed -lcimplog -lcjson -ltrower-base64 -lssl -lcrypto -lrt -lm -lwrp-c -lmsgpackc)

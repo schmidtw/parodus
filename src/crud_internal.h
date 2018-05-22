@@ -19,6 +19,6 @@
 
 int createObject( wrp_msg_t *reqMsg, wrp_msg_t **response );
 int retrieveObject( wrp_msg_t *reqMsg, wrp_msg_t **response);
-int updateObject();
+int updateObject( wrp_msg_t *reqMsg, wrp_msg_t **response);
 int deleteObject(wrp_msg_t *reqMsg, wrp_msg_t **response);
 
