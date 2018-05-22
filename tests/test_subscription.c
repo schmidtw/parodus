@@ -179,11 +179,15 @@ void err_filter_clients_and_send()
 
 void err_delete_client_subscriptions()
 {
-    bool status;
-    status = delete_client_subscriptions("config");
-    assert_false(status);
-    status = delete_client_subscriptions(NULL);
-    assert_false(status);
+    UserDataCounter_t data;
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("config");
+    delete_client_subscriptions(&data);
+    assert( 0 == data.delete_count);
+    free(data.service_name);
+    data.service_name = NULL;
+    delete_client_subscriptions(&data);
+    assert( 0 == data.delete_count);
 }
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
