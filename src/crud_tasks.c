@@ -133,7 +133,7 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
 	    
 	case WRP_MSG_TYPE__UPDATE:
 	    ParodusInfo( "UPDATE request\n" );
-            ret = updateObject( );
+	    ret = updateObject( reqMsg, &resp_msg );
 	    
 	    //WRP payload is NULL for update requests
 	    resp_msg ->u.crud.payload = NULL;
@@ -169,6 +169,8 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
                 }
                 free(user_data.service_name);
             }
+            free(destVal);
+            destVal = NULL;
         }
         else
         {
