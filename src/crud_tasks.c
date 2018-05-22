@@ -151,8 +151,13 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
 		    service_name = get_service_name_from_destination(destVal);
             if(service_name != NULL)
             {
+                UserDataCounter_t user_data;
+                user_data.service_name = strdup(service_name);
+                user_data.hit_count = 0;
+                user_data.delete_count = 0;
                 ParodusPrint("service_name %s\n",service_name);
-                if(0 != delete_client_subscriptions(service_name))
+                delete_client_subscriptions(&user_data);
+                if(0 < user_data.delete_count)
                 {
                     ParodusInfo("%s service deleted successfully\n",service_name);
                     resp_msg ->u.crud.status = 200;
@@ -162,6 +167,7 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
                     ParodusInfo("Failed to delete %s service\n",service_name);
                     resp_msg ->u.crud.status = 400;
                 }
+                free(user_data.service_name);
             }
         }
         else

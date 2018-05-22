@@ -61,6 +61,10 @@ void test_add_Client_Subscription()
     assert_true(status);
     status = add_Client_Subscription("iot", "device-status/*");
     assert_true(status);
+    status = add_Client_Subscription("config2", "node-change/*");
+    assert_true(status);
+    status = add_Client_Subscription("iot2", "device-status/*");
+    assert_true(status);
 }
 
 void test_get_Client_Subscriptions()
@@ -87,15 +91,41 @@ void test_filter_clients_and_send()
 
 void test_delete_client_subscriptions()
 {
-    int status;
-    status = delete_client_subscriptions("config");
-    assert_true(status != 0);
-    status = delete_client_subscriptions("config");
-    assert_true(0 == status);
-    status = delete_client_subscriptions("foo");
-    assert_true(0 == status);
-    status = delete_client_subscriptions("iot");
-    assert_true(0 != status);
+    UserDataCounter_t data;
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("config2");
+    delete_client_subscriptions(&data);
+    assert_true(1 == data.delete_count && 1 == data.hit_count);
+    
+    data.hit_count = 0;
+    data.delete_count = 0;
+    delete_client_subscriptions(&data);
+    assert_true(0 == data.delete_count && 0 == data.hit_count);
+   
+    free(data.service_name);
+    data.service_name = strdup("foo");
+    delete_client_subscriptions(&data);
+    assert_true(0 == data.delete_count && 0 == data.hit_count);
+    free(data.service_name);
+   
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("config");
+    delete_client_subscriptions(&data);
+    assert_true(1 == data.delete_count && 1 == data.hit_count);
+    free(data.service_name);
+   
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("iot2");
+    delete_client_subscriptions(&data);
+    assert_true(1 == data.delete_count && 1 == data.hit_count);
+    free(data.service_name);
+    
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("iot");
+    delete_client_subscriptions(&data);
+    assert_true(1 == data.delete_count && 1 == data.hit_count);
+    free(data.service_name);
+    
 }
 
 /*----------------------------------------------------------------------------*/
