@@ -35,7 +35,7 @@
 /*----------------------------------------------------------------------------*/
 /*                            File Scoped Variables                           */
 /*----------------------------------------------------------------------------*/
-static noPollConn *conn;
+static noPollConn conn;
 static char *reconnect_reason = "webpa_process_starts";
 static ParodusCfg parodusCfg;
 extern size_t metaPackSize;
@@ -54,7 +54,7 @@ void addCRUDmsgToQueue(wrp_msg_t *crudMsg)
 
 noPollConn *get_global_conn()
 {
-    return conn;   
+    return &conn;   
 }
 
 char *get_global_reconnect_reason()
@@ -191,6 +191,12 @@ int validate_partner_id(wrp_msg_t *msg, partners_t **partnerIds)
     function_called();
     return (int) mock();
 }
+
+void filter_clients_and_send(wrp_msg_t *wrp_event_msg)
+{
+    UNUSED(wrp_event_msg);
+    function_called();
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
@@ -286,7 +292,12 @@ void test_processUpstreamMessage()
     expect_function_call(appendEncodedData);
 
     expect_function_call(sendMessage);
-
+    
+    will_return(wrp_to_struct, 10);
+    expect_function_call(wrp_to_struct);
+    
+    expect_function_call(filter_clients_and_send);
+    expect_function_call(wrp_free_struct);
     expect_function_call(wrp_free_struct);
 
     processUpstreamMessage();
@@ -321,6 +332,11 @@ void test_processUpstreamMessageInvalidPartner()
     expect_function_call(appendEncodedData);
 
     expect_function_call(sendMessage);
+    will_return(wrp_to_struct, 10);
+    expect_function_call(wrp_to_struct);
+    
+    expect_function_call(filter_clients_and_send);
+    expect_function_call(wrp_free_struct);
 
     expect_function_call(wrp_free_struct);
     processUpstreamMessage();
