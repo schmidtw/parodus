@@ -238,7 +238,7 @@ target_link_libraries (test_config -lcmocka
 #-------------------------------------------------------------------------------
 add_test(NAME test_upstream COMMAND ${MEMORY_CHECK} ./test_upstream)
 add_executable(test_upstream test_upstream.c ../src/upstream.c ../src/string_helpers.c ../src/peer2peer.c
- ../src/parodus_interface.c ../src/subscription.c)
+ ../src/parodus_interface.c)
 target_link_libraries (test_upstream -lcmocka ${PARODUS_COMMON_LIBS} -lrebar-c)
 
 #-------------------------------------------------------------------------------
