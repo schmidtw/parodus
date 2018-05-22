@@ -69,6 +69,13 @@ bool delete_client_subscriptions(char *service_name);
 rebar_ll_list_t *get_global_subscription_list();
 
 void init_subscription_list();
+
+/* Only deletes the list itself, all nodes must have been deleted otherwise
+ you will have a memory leak.
+ */
+void delete_global_subscription_list(void);
+
+
 #ifdef __cplusplus
 }
 #endif

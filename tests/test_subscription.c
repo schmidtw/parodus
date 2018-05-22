@@ -68,6 +68,7 @@ void test_get_Client_Subscriptions()
     cJSON *json;
     json = get_Client_Subscriptions("config");
     assert_non_null(json);
+    cJSON_Delete(json);
 }
 
 void test_filter_clients_and_send()
@@ -80,12 +81,20 @@ void test_filter_clients_and_send()
     wrp_msg.u.event.payload = NULL;
     wrp_msg.u.event.payload_size = 0;
     filter_clients_and_send(&wrp_msg);
+    free(wrp_msg.u.event.source);
+    free(wrp_msg.u.event.dest);
 }
 
 void test_delete_client_subscriptions()
 {
     bool status;
     status = delete_client_subscriptions("config");
+    assert_true(status);
+    status = delete_client_subscriptions("config");
+    assert_true(false == status);
+    status = delete_client_subscriptions("foo");
+    assert_true(false == status);
+    status = delete_client_subscriptions("iot");
     assert_true(status);
 }
 
@@ -95,6 +104,8 @@ void test_delete_client_subscriptions()
 
 int main(void)
 {
+    int ret;
+
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_init_subscription),
         cmocka_unit_test(test_add_Client_Subscription),
@@ -103,5 +114,8 @@ int main(void)
         cmocka_unit_test(test_delete_client_subscriptions),
     };
 
-    return cmocka_run_group_tests(tests, NULL, NULL);
+    ret =  cmocka_run_group_tests(tests, NULL, NULL);
+    delete_global_subscription_list();
+
+    return ret;
 }
