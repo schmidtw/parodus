@@ -16,7 +16,10 @@ rebar_ll_list_t *g_sub_list = NULL;
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
-static int compare_and_delete_private_data ( void *needle, void *node );
+static void delete_subscritption ( rebar_ll_node_t *node, void *data );
+static rebar_ll_iterator_response_t
+                compare_private_data  ( rebar_ll_node_t *node, void *data );
+
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -129,37 +132,35 @@ void filter_clients_and_send(wrp_msg_t *wrp_event_msg)
 
 bool delete_client_subscriptions(char *service_name)
 {
-    rebar_ll_node_t *node;
-    bool found_match;
+    bool ret_val;
 
-    node = rebar_ll_find( g_sub_list, compare_and_delete_private_data,
-                          service_name, Subscription, sub_node );
+    ret_val = rebar_ll_iterate(g_sub_list, compare_private_data,
+                     delete_subscritption, service_name);
 
-    found_match =  (NULL != node);
-
-    if (found_match) {
-        rebar_ll_remove(g_sub_list, node);
-        free(node);
-    }
-
-    return found_match;
+    return ret_val;
 }
 
-
-int compare_and_delete_private_data ( void *needle, void *node )
+void delete_subscritption ( rebar_ll_node_t *node, void *data )
 {
-    int ret_val = -1;
+    Subscription *sub = rebar_ll_get_data(Subscription, sub_node, node);
+    (void ) data;
 
-    if (needle && node) {
+    free(sub->service_name);
+    if (sub->regex) {
+        free(sub->regex);
+    }
+
+    free(node);
+}
+
+rebar_ll_iterator_response_t compare_private_data ( rebar_ll_node_t *node, void *data )
+{
+    if (node && data) {
          Subscription *sub = rebar_ll_get_data(Subscription, sub_node, node);
-         ret_val = strcmp((char *) needle, sub->service_name);
-         if (0 == ret_val) {
-             free(sub->service_name);
-             if (sub->regex) {
-                 free(sub->regex);
-             }
+         if (0 == strcmp((char *) data, sub->service_name)) {
+             return REBAR_IR__DELETE_AND_CONTINUE ;
          }
     }
 
-    return ret_val;
+    return REBAR_IR__CONTINUE;;
 }
