@@ -82,11 +82,11 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
 					{
 						cJSON *payloadObj = cJSON_Parse( (resp_msg)->u.crud.payload );
 						str = cJSON_PrintUnformatted(payloadObj);
-						ParodusInfo("Payload Response: %s\n", str);
 
 						resp_msg ->u.crud.payload = (void *)str;
 						if(str !=NULL)
 						{
+							ParodusInfo("Payload Response: %s\n", str);
 							resp_msg ->u.crud.payload_size = strlen(str);
 						}
 					}
@@ -112,11 +112,11 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
         {
             cJSON *payloadObj = cJSON_Parse( (resp_msg)->u.crud.payload );
             str = cJSON_PrintUnformatted(payloadObj);
-            ParodusInfo("Payload Response: %s\n", str);
 
             resp_msg ->u.crud.payload = (void *)str;
             if((resp_msg)->u.crud.payload !=NULL)
             {
+            	ParodusInfo("Payload Response: %s\n", str);
                 resp_msg ->u.crud.payload_size = strlen((resp_msg)->u.crud.payload);
             }
         }
