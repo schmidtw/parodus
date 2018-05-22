@@ -152,7 +152,7 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
             if(service_name != NULL)
             {
                 ParodusPrint("service_name %s\n",service_name);
-                if(true == delete_client_subscriptions(service_name))
+                if(0 != delete_client_subscriptions(service_name))
                 {
                     ParodusInfo("%s service deleted successfully\n",service_name);
                     resp_msg ->u.crud.status = 200;

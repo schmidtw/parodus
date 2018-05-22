@@ -62,9 +62,9 @@ void filter_clients_and_send(wrp_msg_t *wrp_event_msg);
 /* To delete all subscriptions for a particular client
  * service_name subscribed nanomsg client identifier
  * Deletes all entries from the in-memory subscription list
- * Returns true once subscription is deleted successfully otherwise false
+ * Returns number of nodes deleted successfully otherwise 0
  */
-bool delete_client_subscriptions(char *service_name);
+int delete_client_subscriptions(char *service_name);
 
 rebar_ll_list_t *get_global_subscription_list();
 

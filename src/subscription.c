@@ -130,9 +130,9 @@ void filter_clients_and_send(wrp_msg_t *wrp_event_msg)
     }
 }
 
-bool delete_client_subscriptions(char *service_name)
+int delete_client_subscriptions(char *service_name)
 {
-    bool ret_val;
+    int ret_val;
 
     ret_val = rebar_ll_iterate(g_sub_list, compare_private_data,
                      delete_subscritption, service_name);

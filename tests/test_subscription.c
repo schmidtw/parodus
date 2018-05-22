@@ -87,15 +87,15 @@ void test_filter_clients_and_send()
 
 void test_delete_client_subscriptions()
 {
-    bool status;
+    int status;
     status = delete_client_subscriptions("config");
-    assert_true(status);
+    assert_true(status != 0);
     status = delete_client_subscriptions("config");
-    assert_true(false == status);
+    assert_true(0 == status);
     status = delete_client_subscriptions("foo");
-    assert_true(false == status);
+    assert_true(0 == status);
     status = delete_client_subscriptions("iot");
-    assert_true(status);
+    assert_true(0 != status);
 }
 
 /*----------------------------------------------------------------------------*/
