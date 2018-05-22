@@ -39,9 +39,10 @@
 /*----------------------------------------------------------------------------*/
 int sendMsgtoRegisteredClients(char *dest,const char **Msg,size_t msgSize)
 {
-    UNUSED(dest);
     UNUSED(Msg);
     UNUSED(msgSize);
+    check_expected(dest);
+    function_called();
     return 0;
 }
 /*----------------------------------------------------------------------------*/
@@ -52,14 +53,27 @@ void test_init_subscription()
 {
     init_subscription_list();
     assert_non_null(get_global_subscription_list());
+    assert_null(get_global_subscription_list()->head);
+    assert_null(get_global_subscription_list()->tail);
 }
 
 void test_add_Client_Subscription()
 {
     bool status;
-    status = add_Client_Subscription("config", "node-change/*");
+    Subscription *sub = NULL;
+    status = add_Client_Subscription("config", "node-change");
     assert_true(status);
-    status = add_Client_Subscription("iot", "device-status/*");
+    assert_int_equal(1, (int)rebar_ll_count(get_global_subscription_list()));
+    sub = rebar_ll_get_data(Subscription, sub_node, get_global_subscription_list()->head);
+    assert_non_null(sub);
+    assert_string_equal("config", sub->service_name);
+    assert_string_equal("node-change", sub->regex);
+    status = add_Client_Subscription("iot", "device-status");
+    assert_int_equal(2, (int)rebar_ll_count(get_global_subscription_list()));
+    sub = rebar_ll_get_data(Subscription, sub_node, get_global_subscription_list()->tail);
+    assert_non_null(sub);
+    assert_string_equal("iot", sub->service_name);
+    assert_string_equal("device-status", sub->regex);
     assert_true(status);
     status = add_Client_Subscription("config2", "node-change/*");
     assert_true(status);
@@ -71,6 +85,8 @@ void test_get_Client_Subscriptions()
 {
     cJSON *json;
     json = get_Client_Subscriptions("config");
+    assert_int_equal(1, cJSON_GetArraySize(json));
+    assert_string_equal("node-change", cJSON_GetArrayItem(json, 0)->valuestring);
     assert_non_null(json);
     cJSON_Delete(json);
 }
@@ -84,6 +100,8 @@ void test_filter_clients_and_send()
     wrp_msg.u.event.dest   = strdup("event:node-change");
     wrp_msg.u.event.payload = NULL;
     wrp_msg.u.event.payload_size = 0;
+    expect_string(sendMsgtoRegisteredClients, dest, "config");
+    expect_function_call(sendMsgtoRegisteredClients);
     filter_clients_and_send(&wrp_msg);
     free(wrp_msg.u.event.source);
     free(wrp_msg.u.event.dest);
@@ -119,15 +137,54 @@ void test_delete_client_subscriptions()
     delete_client_subscriptions(&data);
     assert_true(1 == data.delete_count && 1 == data.hit_count);
     free(data.service_name);
-    
+
+    assert_int_equal(1, (int)rebar_ll_count(get_global_subscription_list()));
+
     memset(&data, 0, sizeof(UserDataCounter_t));
     data.service_name = strdup("iot");
     delete_client_subscriptions(&data);
     assert_true(1 == data.delete_count && 1 == data.hit_count);
     free(data.service_name);
     
+    assert_int_equal(0, (int)rebar_ll_count(get_global_subscription_list()));
 }
 
+void err_add_Client_Subscription()
+{
+    bool status;
+    status = add_Client_Subscription(NULL, "node-change");
+    assert_false(status);
+    assert_int_equal(0, (int)rebar_ll_count(get_global_subscription_list()));
+    status = add_Client_Subscription("iot", NULL);
+    assert_int_equal(0, (int)rebar_ll_count(get_global_subscription_list()));
+    assert_false(status);
+    status = add_Client_Subscription(NULL, NULL);
+    assert_int_equal(0, (int)rebar_ll_count(get_global_subscription_list()));
+    assert_false(status);
+}
+
+void err_get_Client_Subscriptions()
+{
+    cJSON *json;
+    json = get_Client_Subscriptions("config");
+    assert_null(json);
+    json = get_Client_Subscriptions(NULL);
+    assert_null(json);
+}
+
+void err_filter_clients_and_send()
+{
+    filter_clients_and_send(NULL);
+}
+
+void err_delete_client_subscriptions()
+{
+    bool status;
+    status = delete_client_subscriptions("config");
+    assert_false(status);
+    status = delete_client_subscriptions(NULL);
+    assert_false(status);
+}
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -142,6 +199,10 @@ int main(void)
         cmocka_unit_test(test_get_Client_Subscriptions),
         cmocka_unit_test(test_filter_clients_and_send),
         cmocka_unit_test(test_delete_client_subscriptions),
+        cmocka_unit_test(err_add_Client_Subscription),
+        cmocka_unit_test(err_get_Client_Subscriptions),
+        cmocka_unit_test(err_filter_clients_and_send),
+        cmocka_unit_test(err_delete_client_subscriptions),
     };
 
     ret =  cmocka_run_group_tests(tests, NULL, NULL);
