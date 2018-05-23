@@ -71,7 +71,7 @@ void createSocketConnection(void (* initKeypress)())
     //ParodusCfg *tmpCfg = (ParodusCfg*)config_in;
     noPollCtx *ctx;
     bool seshat_registered = false;
-    socket_handles_t sock;
+    socket_handles_t sock = { -1, -1 };
     
     //loadParodusCfg(tmpCfg,get_parodus_cfg());
 #ifdef FEATURE_DNS_QUERY
@@ -120,7 +120,7 @@ void createSocketConnection(void (* initKeypress)())
     if( 0 == strncmp(HUB_STR, get_parodus_cfg()->hub_or_spk, sizeof(HUB_STR)) ) {
         hub_setup(pipelineURL, pubsubURL, &sock.pipeline, &sock.pubsub);
     } else if( 0 == strncmp(SPK_STR, get_parodus_cfg()->hub_or_spk, sizeof(SPK_STR)) ) {
-        spoke_setup(pipelineURL, pubsubURL, NULL, &sock.pipeline, &sock.pubsub);
+        spoke_setup(pipelineURL, pubsubURL, &sock.pipeline, &sock.pubsub);
     }
     StartThread(handle_P2P_Incoming, &sock);
     StartThread(process_P2P_IncomingMessage, &sock);
@@ -171,12 +171,11 @@ void createSocketConnection(void (* initKeypress)())
         }		
     } while(!close_retry);
 
-    if( 0 == strncmp(HUB_STR, get_parodus_cfg()->hub_or_spk, sizeof(HUB_STR)) ) {
-        sock_cleanup(sock.pipeline);
-        sock_cleanup(sock.pubsub);
-    } else if( 0 == strncmp(SPK_STR, get_parodus_cfg()->hub_or_spk, sizeof(SPK_STR)) ) {
-        sock_cleanup(sock.pipeline);
-        sock_cleanup(sock.pubsub); 
+    if( (0 == strncmp(HUB_STR, get_parodus_cfg()->hub_or_spk, sizeof(HUB_STR))) ||
+        (0 == strncmp(SPK_STR, get_parodus_cfg()->hub_or_spk, sizeof(SPK_STR))) ) 
+    {
+        sock_cleanup(&sock.pipeline);
+        sock_cleanup(&sock.pubsub); 
     }
 
     close_and_unref_connection(get_global_conn());

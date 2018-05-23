@@ -77,15 +77,15 @@ void test_push_pull()
 
     pthread_create(&t, NULL, check_hub, NULL);
 
-    spoke_setup( SPOKE, HUB, NULL, &pipeline_sock, &pubsub_sock );
+    spoke_setup( SPOKE, HUB, &pipeline_sock, &pubsub_sock );
     for( ;; ) {
         result = send_msg(pipeline_sock, tests[0].n, tests[0].nsz);
         if( true == result ) {
             break;
         }
     }
-    sock_cleanup(pipeline_sock);
-    sock_cleanup(pubsub_sock);
+    sock_cleanup(&pipeline_sock);
+    sock_cleanup(&pubsub_sock);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -138,7 +138,7 @@ static void *check_hub()
             break;
         }
     }
-    sock_cleanup(pipeline_sock);
-    sock_cleanup(pubsub_sock);
+    sock_cleanup(&pipeline_sock);
+    sock_cleanup(&pubsub_sock);
     return NULL;
 }

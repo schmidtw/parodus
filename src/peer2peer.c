@@ -93,7 +93,6 @@ void *handle_P2P_Incoming(void *args)
 
 void *process_P2P_IncomingMessage(void *args)
 {
-    int rv=-1; (void) rv;
     bool status;
     socket_handles_t *p_sock;
     ParodusPrint("****** %s *******\n",__FUNCTION__);
@@ -143,7 +142,6 @@ void *process_P2P_IncomingMessage(void *args)
 **/
 void *process_P2P_OutgoingMessage(void *args)
 {
-    int rv=-1; (void) rv;
     bool status;
     socket_handles_t *p_sock;
     ParodusInfo("****** %s *******\n",__FUNCTION__);

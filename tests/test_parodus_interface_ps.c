@@ -78,7 +78,7 @@ void test_pub_sub()
 
     pthread_create(&t, NULL, send_hub, NULL);
 
-    spoke_setup( SPOKE, HUB, NULL, &pipeline_sock, &pubsub_sock );
+    spoke_setup( SPOKE, HUB, &pipeline_sock, &pubsub_sock );
     for( ;; ) {
         msg_sz = check_inbox(pubsub_sock, (void **) &msg);
         if( 0 < msg_sz ) {
@@ -89,8 +89,8 @@ void test_pub_sub()
             break;
         }
     }
-    sock_cleanup(pipeline_sock);
-    sock_cleanup(pubsub_sock);
+    sock_cleanup(&pipeline_sock);
+    sock_cleanup(&pubsub_sock);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -140,7 +140,7 @@ static void *send_hub()
             break;
         }
     }
-    sock_cleanup(pipeline_sock);
-    sock_cleanup(pubsub_sock);
+    sock_cleanup(&pipeline_sock);
+    sock_cleanup(&pubsub_sock);
     return NULL;
 }

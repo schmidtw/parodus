@@ -47,7 +47,7 @@
 /*----------------------------------------------------------------------------*/
 /*                             External functions                             */
 /*----------------------------------------------------------------------------*/
-bool spoke_setup(const char *pipeline_url, const char *pubsub_url, const char **topics, int *pipeline_sock, int *pubsub_sock)
+bool spoke_setup(const char *pipeline_url, const char *pubsub_url, int *pipeline_sock, int *pubsub_sock)
 {
     int sock;
     int rv;
@@ -60,7 +60,7 @@ bool spoke_setup(const char *pipeline_url, const char *pubsub_url, const char **
     }
 
     /* Subscribe to everything ("" means all topics) */
-    rv = nn_setsockopt(sock, NN_SUB, NN_SUB_SUBSCRIBE, "", 0); (void) topics; // ignoring topics for now
+    rv = nn_setsockopt(sock, NN_SUB, NN_SUB_SUBSCRIBE, "", 0); 
     if( 0 > rv ) {
         ParodusError("NN spoke sub socket topics setting error %d, %d(%s)\n", sock, errno, strerror(errno));
         nn_close(sock);
@@ -153,10 +153,13 @@ finished:
     return false;
 }
 
-void sock_cleanup(int sock)
+void sock_cleanup(int *sock)
 {
-    nn_shutdown(sock, 0);
-    nn_close(sock);
+    if( *sock >= 0 ) {
+        nn_shutdown(*sock, 0);
+        nn_close(*sock);
+        *sock = -1;
+    }
 }
 
 bool send_msg(int sock, const void *notification, size_t notification_size)
