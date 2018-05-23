@@ -16,7 +16,7 @@ rebar_ll_list_t *g_sub_list = NULL;
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
-static void __delete_subscritption ( rebar_ll_node_t *node, void *data );
+static void __delete_subscription ( rebar_ll_node_t *node, void *data );
 static rebar_ll_iterator_response_t
                 __compare_private_data  ( rebar_ll_node_t *node, void *data );
 
@@ -133,10 +133,10 @@ void filter_clients_and_send(wrp_msg_t *wrp_event_msg)
 void delete_client_subscriptions(UserDataCounter_t *user_data)
 {
     rebar_ll_iterate(g_sub_list, __compare_private_data,
-                     __delete_subscritption, user_data);
+                     __delete_subscription, user_data);
 }
 
-void __delete_subscritption ( rebar_ll_node_t *node, void *data )
+void __delete_subscription ( rebar_ll_node_t *node, void *data )
 {
     Subscription *sub = rebar_ll_get_data(Subscription, sub_node, node);
 
@@ -159,5 +159,5 @@ rebar_ll_iterator_response_t __compare_private_data ( rebar_ll_node_t *node, voi
          }
     }
 
-    return REBAR_IR__CONTINUE;;
+    return REBAR_IR__CONTINUE;
 }

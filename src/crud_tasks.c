@@ -159,7 +159,8 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
                 delete_client_subscriptions(&user_data);
                 if(0 < user_data.delete_count)
                 {
-                    ParodusInfo("%s service deleted successfully\n",service_name);
+                    ParodusInfo("%s found %d instances, deleted %d instances successfully\n",
+                                service_name, user_data.hit_count, user_data.delete_count);
                     resp_msg ->u.crud.status = 200;
                 }
                 else
