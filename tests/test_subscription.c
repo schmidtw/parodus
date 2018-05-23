@@ -75,6 +75,10 @@ void test_add_Client_Subscription()
     assert_string_equal("iot", sub->service_name);
     assert_string_equal("device-status", sub->regex);
     assert_true(status);
+    status = add_Client_Subscription("config2", "node-change/*");
+    assert_true(status);
+    status = add_Client_Subscription("iot2", "device-status/*");
+    assert_true(status);
 }
 
 void test_get_Client_Subscriptions()
@@ -84,6 +88,7 @@ void test_get_Client_Subscriptions()
     assert_int_equal(1, cJSON_GetArraySize(json));
     assert_string_equal("node-change", cJSON_GetArrayItem(json, 0)->valuestring);
     assert_non_null(json);
+    cJSON_Delete(json);
 }
 
 void test_filter_clients_and_send()
@@ -98,16 +103,49 @@ void test_filter_clients_and_send()
     expect_string(sendMsgtoRegisteredClients, dest, "config");
     expect_function_call(sendMsgtoRegisteredClients);
     filter_clients_and_send(&wrp_msg);
+    free(wrp_msg.u.event.source);
+    free(wrp_msg.u.event.dest);
 }
 
 void test_delete_client_subscriptions()
 {
-    bool status;
-    status = delete_client_subscriptions("config");
-    assert_true(status);
+    UserDataCounter_t data;
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("config2");
+    delete_client_subscriptions(&data);
+    assert_true(1 == data.delete_count && 1 == data.hit_count);
+    
+    data.hit_count = 0;
+    data.delete_count = 0;
+    delete_client_subscriptions(&data);
+    assert_true(0 == data.delete_count && 0 == data.hit_count);
+   
+    free(data.service_name);
+    data.service_name = strdup("foo");
+    delete_client_subscriptions(&data);
+    assert_true(0 == data.delete_count && 0 == data.hit_count);
+    free(data.service_name);
+   
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("config");
+    delete_client_subscriptions(&data);
+    assert_true(1 == data.delete_count && 1 == data.hit_count);
+    free(data.service_name);
+   
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("iot2");
+    delete_client_subscriptions(&data);
+    assert_true(1 == data.delete_count && 1 == data.hit_count);
+    free(data.service_name);
+
     assert_int_equal(1, (int)rebar_ll_count(get_global_subscription_list()));
-    status = delete_client_subscriptions("iot");
-    assert_true(status);
+
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("iot");
+    delete_client_subscriptions(&data);
+    assert_true(1 == data.delete_count && 1 == data.hit_count);
+    free(data.service_name);
+  
     assert_int_equal(0, (int)rebar_ll_count(get_global_subscription_list()));
 }
 
@@ -141,11 +179,15 @@ void err_filter_clients_and_send()
 
 void err_delete_client_subscriptions()
 {
-    bool status;
-    status = delete_client_subscriptions("config");
-    assert_false(status);
-    status = delete_client_subscriptions(NULL);
-    assert_false(status);
+    UserDataCounter_t data;
+    memset(&data, 0, sizeof(UserDataCounter_t));
+    data.service_name = strdup("config");
+    delete_client_subscriptions(&data);
+    assert( 0 == data.delete_count);
+    free(data.service_name);
+    data.service_name = NULL;
+    delete_client_subscriptions(&data);
+    assert( 0 == data.delete_count);
 }
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
@@ -153,6 +195,8 @@ void err_delete_client_subscriptions()
 
 int main(void)
 {
+    int ret;
+
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_init_subscription),
         cmocka_unit_test(test_add_Client_Subscription),
@@ -165,5 +209,8 @@ int main(void)
         cmocka_unit_test(err_delete_client_subscriptions),
     };
 
-    return cmocka_run_group_tests(tests, NULL, NULL);
+    ret =  cmocka_run_group_tests(tests, NULL, NULL);
+    delete_global_subscription_list();
+
+    return ret;
 }
