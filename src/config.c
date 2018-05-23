@@ -301,12 +301,13 @@ int parseCommandLine(int argc,char **argv,ParodusCfg * cfg)
         {"hub-or-spoke",            required_argument, 0, 'h'},
         {"Xmidt", no_argument, 0, 'X'}, /* Parodus MUST not try to connect to Xmidt */
         {"pipeline-url",            required_argument, 0, 'P'},
-        {"pubsub-url",            required_argument, 0, 'S'},
+        {"pubsub-url",              required_argument, 0, 'S'},
+        {"crud-config-file",        required_argument, 0, 'C'},
         
         /* -F Overrides all other arguments, will parse the configuration file specified */
         {"config-file", required_argument, 0, 'F'},        {0, 0, 0, 0}
     };
-    const char *option_string = "F:X::m:s:f:d:r:n:b:u:t:o:i:l:p:e:D:j:a:k:c:T:J:46:h:P:S";
+    const char *option_string = "F:X::m:s:f:d:r:n:b:u:t:o:i:l:p:e:D:j:a:k:c:T:J:46:h:P:S:C";
     int c;
     ParodusInfo("Parsing parodus command line arguments..\n");
 
@@ -321,6 +322,7 @@ int parseCommandLine(int argc,char **argv,ParodusCfg * cfg)
 	parStrncpy (cfg->jwt_key, "", sizeof(cfg->jwt_key));
 	cfg->pipeline_url = NULL;
 	cfg->pubsub_url = NULL;
+	cfg->crud_config_file = NULL;
 	optind = 1;  /* We need this if parseCommandLine is called again */
     while (keepParsing)
     {
@@ -484,6 +486,11 @@ int parseCommandLine(int argc,char **argv,ParodusCfg * cfg)
           cfg->pubsub_url = strdup(optarg);
           ParodusInfo("pubsub_url is %s\n",cfg->pubsub_url);
           break;
+          
+		case 'C':
+		  cfg->crud_config_file = strdup(optarg);
+		  ParodusInfo("crud_config_file is %s\n", cfg->crud_config_file);
+		  break;
 
         case '?':
           /* getopt_long already printed an error message. */
@@ -633,6 +640,8 @@ void setDefaultValuesToCfg(ParodusCfg *cfg)
     ParodusPrint("cfg->webpa_uuid is :%s\n", cfg->webpa_uuid);
     cfg->pipeline_url = NULL;
 	cfg->pubsub_url = NULL;
+	cfg->crud_config_file = strdup("parodus_cfg.json");
+	ParodusPrint("Default crud_config_file is %s\n", cfg->crud_config_file);
 }
 
 void loadParodusCfg(ParodusCfg * config,ParodusCfg *cfg)
@@ -823,6 +832,15 @@ void loadParodusCfg(ParodusCfg * config,ParodusCfg *cfg)
     else
     {
         ParodusPrint("pubsub_url is NULL. set to empty\n");
+    }
+    
+    if(config->crud_config_file != NULL)
+    {
+        cfg->crud_config_file = strdup(config->crud_config_file);
+    }
+    else
+    {
+        ParodusPrint("crud_config_file is NULL. set to empty\n");
     }
 }
 

@@ -86,6 +86,7 @@ void test_setParodusConfig()
     parStrncpy(cfg.hub_or_spk, "", sizeof(cfg.hub_or_spk));
     cfg.pipeline_url = strdup("tcp://127.0.0.1:1111");
     cfg.pubsub_url = NULL;
+    cfg.crud_config_file = strdup("parodus_cfg.json");
     set_parodus_cfg(&cfg);
 
     ParodusCfg *temp = get_parodus_cfg();
@@ -116,6 +117,7 @@ void test_setParodusConfig()
 #endif
     assert_string_equal(cfg.hub_or_spk, temp->hub_or_spk);
     assert_string_equal(cfg.pipeline_url, temp->pipeline_url);
+    assert_string_equal(cfg.crud_config_file, temp->crud_config_file);
     free_parodusCfg(&cfg);
 }
 
@@ -197,6 +199,7 @@ void test_parseCommandLine()
                 "--hub-or-spoke=hub",
         "--pipeline-url=tcp://127.0.0.1:9999",
         "--pubsub-url=tcp://127.0.0.1:5555",
+        "--crud-config-file=parodus_cfg.json",
 		NULL
 	};
 	int argc = (sizeof (command) / sizeof (char *)) - 1;
@@ -242,6 +245,7 @@ void test_parseCommandLine()
     assert_string_equal(parodusCfg.hub_or_spk, "hub");
     assert_string_equal(parodusCfg.pipeline_url, "tcp://127.0.0.1:9999");
     assert_string_equal(parodusCfg.pubsub_url, "tcp://127.0.0.1:5555");
+    assert_string_equal(parodusCfg.crud_config_file, "parodus_cfg.json");
     free_parodusCfg(&parodusCfg);
 }
 
@@ -332,6 +336,7 @@ void test_loadParodusCfg()
     parStrncpy(Cfg->hub_or_spk, "spk1", sizeof(Cfg->hub_or_spk));
     Cfg->pipeline_url = strdup("tcp://127.0.0.1:2222");
     Cfg->pubsub_url = strdup("tcp://127.0.0.1:3333");
+    Cfg->crud_config_file = strdup("parodus_cfg.json");
     memset(&tmpcfg,0,sizeof(ParodusCfg));
     loadParodusCfg(Cfg,&tmpcfg);
 
@@ -357,6 +362,7 @@ void test_loadParodusCfg()
     assert_string_equal(tmpcfg.hub_or_spk, "spk1");
     assert_string_equal(tmpcfg.pipeline_url, "tcp://127.0.0.1:2222");
     assert_string_equal(tmpcfg.pubsub_url, "tcp://127.0.0.1:3333");
+    assert_string_equal(tmpcfg.crud_config_file, "parodus_cfg.json");
     free_parodusCfg(Cfg);
     free(Cfg);
     free_parodusCfg(&tmpcfg);
@@ -381,6 +387,7 @@ void test_loadParodusCfgNull()
     assert_string_equal( temp.local_url, PARODUS_UPSTREAM);
     assert_null(temp.pipeline_url);
     assert_null(temp.pubsub_url);
+    assert_null(temp.crud_config_file);
     free(cfg);
 }
 
