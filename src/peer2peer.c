@@ -182,6 +182,10 @@ void *process_P2P_OutgoingMessage(void *args)
 		    if( status == true )
 		    {
 		        ParodusInfo("Successfully sent event to hub\n");
+                        if( num_fail > 0 ) 
+                        {
+                            num_fail = 0;
+                        }
 	            }
 		    else
 		    {
@@ -195,7 +199,7 @@ void *process_P2P_OutgoingMessage(void *args)
                                 status = spoke_setup_pipeline(p_sock->pipeline.url, &p_sock->pipeline.sock);
                                 if( status == false )
                                 {
-                                    retry_time = (int) pow(2, c++) -1;
+                                    retry_time = (int) pow(2, c++) - 1;
                                     ParodusError("Failed to spoke setup pipeline, retrying in %u seconds\n", retry_time);
                                     sleep(retry_time);
                                 }
