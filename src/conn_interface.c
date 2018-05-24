@@ -71,7 +71,7 @@ void createSocketConnection(void (* initKeypress)())
     //ParodusCfg *tmpCfg = (ParodusCfg*)config_in;
     noPollCtx *ctx;
     bool seshat_registered = false;
-    socket_handles_t sock = { -1, -1 };
+    socket_handles_t sock = { {NULL, -1}, {NULL, -1}, };
     
     //loadParodusCfg(tmpCfg,get_parodus_cfg());
 #ifdef FEATURE_DNS_QUERY
@@ -108,19 +108,21 @@ void createSocketConnection(void (* initKeypress)())
     seshat_registered = __registerWithSeshat();
     init_subscription_list();
 
-    char *pipelineURL = PIPELINE_URL;
-    char *pubsubURL = PUBSUB_URL;
+    sock.pipeline.url = PIPELINE_URL;
+    sock.pubsub.url = PUBSUB_URL;
     if(NULL != get_parodus_cfg()->pipeline_url) {
-	pipelineURL = get_parodus_cfg()->pipeline_url;
+	sock.pipeline.url = get_parodus_cfg()->pipeline_url;
     }
     if(NULL != get_parodus_cfg()->pubsub_url) {
-	pubsubURL = get_parodus_cfg()->pubsub_url;
+	sock.pubsub.url = get_parodus_cfg()->pubsub_url;
     }
     
     if( 0 == strncmp(HUB_STR, get_parodus_cfg()->hub_or_spk, sizeof(HUB_STR)) ) {
-        hub_setup(pipelineURL, pubsubURL, &sock.pipeline, &sock.pubsub);
+        hub_setup_pipeline(sock.pipeline.url, &sock.pipeline.sock);
+        hub_setup_pubsub(sock.pubsub.url, &sock.pubsub.sock);
     } else if( 0 == strncmp(SPK_STR, get_parodus_cfg()->hub_or_spk, sizeof(SPK_STR)) ) {
-        spoke_setup(pipelineURL, pubsubURL, &sock.pipeline, &sock.pubsub);
+        spoke_setup_pipeline(sock.pipeline.url, &sock.pipeline.sock);
+        spoke_setup_pubsub(sock.pubsub.url, &sock.pubsub.sock);
     }
     StartThread(handle_P2P_Incoming, &sock);
     StartThread(process_P2P_IncomingMessage, &sock);
@@ -174,8 +176,8 @@ void createSocketConnection(void (* initKeypress)())
     if( (0 == strncmp(HUB_STR, get_parodus_cfg()->hub_or_spk, sizeof(HUB_STR))) ||
         (0 == strncmp(SPK_STR, get_parodus_cfg()->hub_or_spk, sizeof(SPK_STR))) ) 
     {
-        sock_cleanup(&sock.pipeline);
-        sock_cleanup(&sock.pubsub); 
+        cleanup_sock(&sock.pipeline.sock);
+        cleanup_sock(&sock.pubsub.sock); 
     }
 
     close_and_unref_connection(get_global_conn());

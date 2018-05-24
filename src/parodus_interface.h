@@ -37,35 +37,51 @@ extern "C" {
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
 /**
- *  @note Call this with valid parameter before using any function
+ *  @note Call this with valid parameter before any spoke pubsub sock operation
  *
- *  @param pipeline_url  [in]  URL
  *  @param pubsub_url    [in]  URL
- *  @param pipeline_sock [out] sock
  *  @param pubsub_sock   [out] sock
  *
  *  @return true if success, false if failure
  */
-bool spoke_setup(const char *pipeline_url, const char *pubsub_url, int *pipeline_sock, int *pubsub_sock);
+bool spoke_setup_pubsub(const char *pubsub_url, int *pubsub_sock);
 
 /**
- *  @note Call this with valid parameter before using any function
+ *  @note Call this with valid parameter before any spoke pipeline sock operation
  *
  *  @param pipeline_url  [in]  URL
- *  @param pubsub_url    [in]  URL
  *  @param pipeline_sock [out] sock
+ *
+ *  @return true if success, false if failure
+ */
+bool spoke_setup_pipeline(const char *pipeline_url, int *pipeline_sock);
+
+/**
+ *  @note Call this with valid parameter before any hub pipeline sock operation
+ *
+ *  @param pipeline_url  [in]  URL
+ *  @param pipeline_sock [out] sock
+ *
+ *  @return true if success, false if failure
+ */
+bool hub_setup_pipeline(const char *pipeline_url, int *pipeline_sock);
+
+/**
+ *  @note Call this with valid parameter before any hub pubsub sock operation
+ *
+ *  @param pubsub_url    [in]  URL
  *  @param pubsub_sock   [out] sock
  *
  *  @return true if success, false if failure
  */
-bool hub_setup(const char *pipeline_url, const char *pubsub_url, int *pipeline_sock, int *pubsub_sock);
+bool hub_setup_pubsub(const char *pubsub_url, int *pubsub_sock);
 
 /**
  *  @note Call this after any setup function to cleanup
  *
  *  @param sock handle
  */
-void sock_cleanup(int *sock);
+void cleanup_sock(int *sock);
 
 /**
  *  Send message.
