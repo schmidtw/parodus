@@ -134,6 +134,7 @@ typedef struct
     char hub_or_spk[5];
     char *pipeline_url;
     char *pubsub_url;
+    char *crud_config_file;
     /* Instance_type will replace hub_or_spk, so we don't need strcmp, etc...
        Also will allow for easier addition of any other type   
     */

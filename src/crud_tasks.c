@@ -82,11 +82,11 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
 					{
 						cJSON *payloadObj = cJSON_Parse( (resp_msg)->u.crud.payload );
 						str = cJSON_PrintUnformatted(payloadObj);
-						ParodusInfo("Payload Response: %s\n", str);
 
 						resp_msg ->u.crud.payload = (void *)str;
 						if(str !=NULL)
 						{
+							ParodusInfo("Payload Response: %s\n", str);
 							resp_msg ->u.crud.payload_size = strlen(str);
 						}
 					}
@@ -112,11 +112,11 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
         {
             cJSON *payloadObj = cJSON_Parse( (resp_msg)->u.crud.payload );
             str = cJSON_PrintUnformatted(payloadObj);
-            ParodusInfo("Payload Response: %s\n", str);
 
             resp_msg ->u.crud.payload = (void *)str;
             if((resp_msg)->u.crud.payload !=NULL)
             {
+            	ParodusInfo("Payload Response: %s\n", str);
                 resp_msg ->u.crud.payload_size = strlen((resp_msg)->u.crud.payload);
             }
         }
@@ -151,10 +151,16 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
 		    service_name = get_service_name_from_destination(destVal);
             if(service_name != NULL)
             {
+                UserDataCounter_t user_data;
+                user_data.service_name = strdup(service_name);
+                user_data.hit_count = 0;
+                user_data.delete_count = 0;
                 ParodusPrint("service_name %s\n",service_name);
-                if(true == delete_client_subscriptions(service_name))
+                delete_client_subscriptions(&user_data);
+                if(0 < user_data.delete_count)
                 {
-                    ParodusInfo("%s service deleted successfully\n",service_name);
+                    ParodusInfo("%s found %d instances, deleted %d instances successfully\n",
+                                service_name, user_data.hit_count, user_data.delete_count);
                     resp_msg ->u.crud.status = 200;
                 }
                 else
@@ -162,6 +168,7 @@ int processCrudRequest( wrp_msg_t *reqMsg, wrp_msg_t **responseMsg)
                     ParodusInfo("Failed to delete %s service\n",service_name);
                     resp_msg ->u.crud.status = 400;
                 }
+                free(user_data.service_name);
             }
             free(destVal);
             destVal = NULL;

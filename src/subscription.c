@@ -16,6 +16,9 @@ rebar_ll_list_t *g_sub_list = NULL;
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
+static void __delete_subscription ( rebar_ll_node_t *node, void *data );
+static rebar_ll_iterator_response_t
+                __compare_private_data  ( rebar_ll_node_t *node, void *data );
 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
@@ -26,12 +29,22 @@ rebar_ll_list_t *get_global_subscription_list(void)
     return g_sub_list;
 }
 
+void delete_global_subscription_list(void)
+{
+    free(g_sub_list);
+    g_sub_list = NULL;
+}
+
 void init_subscription_list()
 {
-    ParodusPrint("****** %s *******\n",__FUNCTION__);
-    g_sub_list = (rebar_ll_list_t *) malloc(sizeof(rebar_ll_list_t));
-    memset(g_sub_list, 0, sizeof(rebar_ll_list_t));
-    rebar_ll_init( g_sub_list );
+    if (NULL == g_sub_list) {
+        ParodusPrint("****** %s *******\n",__FUNCTION__);
+        g_sub_list = (rebar_ll_list_t *) malloc(sizeof(rebar_ll_list_t));
+        memset(g_sub_list, 0, sizeof(rebar_ll_list_t));
+        rebar_ll_init( g_sub_list );
+    } else {
+        ParodusError("%s: g_sub_list already initialized!!\n",__FUNCTION__);
+    }
 }
 
 bool add_Client_Subscription(char *service_name, char *regex)
@@ -79,7 +92,9 @@ cJSON* get_Client_Subscriptions(char *service_name)
     }
     else
     {
-        ParodusPrint("jsonArray = %s\n",cJSON_Print(jsonArray));
+        char *str = cJSON_Print(jsonArray);
+        ParodusPrint("jsonArray = %s\n", str);
+        free(str);
     }
     return jsonArray;
 }
@@ -115,23 +130,34 @@ void filter_clients_and_send(wrp_msg_t *wrp_event_msg)
     }
 }
 
-bool delete_client_subscriptions(char *service_name)
+void delete_client_subscriptions(UserDataCounter_t *user_data)
 {
-    rebar_ll_node_t *node = NULL;
-    Subscription *sub = NULL;
-    bool match_found = false;
-    ParodusPrint("****** %s *******\n",__FUNCTION__);
-    node = rebar_ll_get_first( g_sub_list );
-    while( NULL != node ) 
-    {
-        sub = rebar_ll_get_data(Subscription, sub_node, node);
-        ParodusPrint("sub->service_name = %s sub->regex = %s\n",sub->service_name,sub->regex);
-        if(strcmp(sub->service_name, service_name) == 0)
-        {
-            rebar_ll_remove( g_sub_list, node );
-            match_found = true;
-        }
-        node = node->next;
+    rebar_ll_iterate(g_sub_list, __compare_private_data,
+                     __delete_subscription, user_data);
+}
+
+void __delete_subscription ( rebar_ll_node_t *node, void *data )
+{
+    Subscription *sub = rebar_ll_get_data(Subscription, sub_node, node);
+
+    free(sub->service_name);
+    if (sub->regex) {
+        free(sub->regex);
     }
-    return match_found;
+    ((UserDataCounter_t *) data)->delete_count++;
+    free(node);
+}
+
+rebar_ll_iterator_response_t __compare_private_data ( rebar_ll_node_t *node, void *data )
+{
+    if (node && data) {
+         Subscription *sub = rebar_ll_get_data(Subscription, sub_node, node);
+
+         if (0 == strcmp(((UserDataCounter_t *) data)->service_name, sub->service_name)) {
+             ((UserDataCounter_t *) data)->hit_count++;
+             return REBAR_IR__DELETE_AND_CONTINUE ;
+         }
+    }
+
+    return REBAR_IR__CONTINUE;
 }
