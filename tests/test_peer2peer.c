@@ -43,7 +43,7 @@ ParodusCfg *get_parodus_cfg(void)
 
 ssize_t check_inbox(int sock, void **msg)
 {
-    UNUSED(sock); //UNUSED(msg);
+    UNUSED(sock);
     *msg = notification;
     function_called();
     return (ssize_t)mock();
@@ -66,6 +66,14 @@ void sendToAllRegisteredClients(void **resp_bytes, size_t resp_size)
 {
     UNUSED(resp_bytes); UNUSED(resp_size);
     function_called();
+}
+
+int pthread_cond_wait(pthread_cond_t *restrict cond,
+pthread_mutex_t *restrict mutex)
+{
+    UNUSED(cond); UNUSED(mutex);
+    function_called();
+    return 0;
 }
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
@@ -142,23 +150,63 @@ void test_process_P2P_IncomingMessage_spoke()
 
 void test_add_P2P_OutgoingMessage()
 {
-    wrp_msg_t wrp_msg;
+    wrp_msg_t wrp_msg, wrp_msg1, wrp_msg2, wrp_msg3;
     wrp_msg_t *msg = NULL;
     void *bytes = NULL;
     int rv = -1;
+    int size = 0;
     memset(&wrp_msg, 0, sizeof(wrp_msg_t));
-    wrp_msg.msg_type = WRP_MSG_TYPE__EVENT;     
+    wrp_msg.msg_type = WRP_MSG_TYPE__EVENT;
     wrp_msg.u.event.source = strdup("mac:14cfe214266");
     wrp_msg.u.event.dest   = strdup("event:node-change");
     wrp_msg.u.event.payload = "Hello world";
     wrp_msg.u.event.payload_size = 12;
-    
-    int size = wrp_struct_to( &wrp_msg, WRP_BYTES, &bytes );
+
+    memset(&wrp_msg1, 0, sizeof(wrp_msg_t));
+    wrp_msg1.msg_type = WRP_MSG_TYPE__EVENT;
+    wrp_msg1.u.event.source = strdup("mac:14cfe654385");
+    wrp_msg1.u.event.dest   = strdup("event:connected-client");
+    wrp_msg1.u.event.payload = "Hello world";
+    wrp_msg1.u.event.payload_size = 12;
+
+    memset(&wrp_msg2, 0, sizeof(wrp_msg_t));
+    wrp_msg2.msg_type = WRP_MSG_TYPE__EVENT;
+    wrp_msg2.u.event.source = strdup("mac:14cfe214265");
+    wrp_msg2.u.event.dest   = strdup("event:node-change");
+    wrp_msg2.u.event.payload = "Hello world";
+    wrp_msg2.u.event.payload_size = 12;
+
+    memset(&wrp_msg3, 0, sizeof(wrp_msg_t));
+    wrp_msg3.msg_type = WRP_MSG_TYPE__EVENT;
+    wrp_msg3.u.event.source = strdup("mac:14cfe654384");
+    wrp_msg3.u.event.dest   = strdup("event:connected-client");
+    wrp_msg3.u.event.payload = "Hello world";
+    wrp_msg3.u.event.payload_size = 12;
+
+    size = wrp_struct_to( &wrp_msg, WRP_BYTES, &bytes );
     add_P2P_OutgoingMessage(&bytes, size);
     assert_non_null(outMsgQ);
     assert_int_equal(size, outMsgQ->len);
     assert_null(outMsgQ->next);
-    
+
+    size = wrp_struct_to( &wrp_msg1, WRP_BYTES, &bytes );
+    add_P2P_OutgoingMessage(&bytes, size);
+    assert_non_null(outMsgQ->next);
+    assert_int_equal(size, outMsgQ->next->len);
+    assert_null(outMsgQ->next->next);
+
+    size = wrp_struct_to( &wrp_msg2, WRP_BYTES, &bytes );
+    add_P2P_OutgoingMessage(&bytes, size);
+    assert_non_null(outMsgQ->next->next);
+    assert_int_equal(size, outMsgQ->next->next->len);
+    assert_null(outMsgQ->next->next->next);
+
+    size = wrp_struct_to( &wrp_msg3, WRP_BYTES, &bytes );
+    add_P2P_OutgoingMessage(&bytes, size);
+    assert_non_null(outMsgQ->next->next->next);
+    assert_int_equal(size, outMsgQ->next->next->next->len);
+    assert_null(outMsgQ->next->next->next->next);
+
     rv = wrp_to_struct( outMsgQ->msg, outMsgQ->len, WRP_BYTES, &msg );
     assert_true(rv > 0);
     assert_non_null(msg);
@@ -176,21 +224,7 @@ void test_process_P2P_OutgoingMessage_hub()
     sock.pipeline = 1;
     sock.pubsub = 0;
     numLoops = 2;
-    void *bytes = NULL;
-    wrp_msg_t wrp_msg;
-    memset(&wrp_msg, 0, sizeof(wrp_msg_t));
-    wrp_msg.msg_type = WRP_MSG_TYPE__EVENT;
-    wrp_msg.u.event.source = strdup("mac:14cfe654385");
-    wrp_msg.u.event.dest   = strdup("event:connected-client");
-    wrp_msg.u.event.payload = "Hello world";
-    wrp_msg.u.event.payload_size = 12;
-    
-    int size = wrp_struct_to( &wrp_msg, WRP_BYTES, &bytes );
-    outMsgQ->next = (P2P_Msg *)malloc(sizeof(P2P_Msg));
-    outMsgQ->next->msg = bytes;
-    outMsgQ->next->len = size;
-    outMsgQ->next->next = NULL;
-    
+
     strcpy(parodusCfg.hub_or_spk, "hub");
     expect_function_call(send_msg);
     will_return(send_msg, true);
@@ -198,6 +232,54 @@ void test_process_P2P_OutgoingMessage_hub()
     will_return(send_msg, false);
     process_P2P_OutgoingMessage(&sock);
 }
+
+void test_process_P2P_OutgoingMessage_spoke()
+{
+    socket_handles_t sock;
+    sock.pipeline = 0;
+    sock.pubsub = 1;
+    numLoops = 2;
+
+    strcpy(parodusCfg.hub_or_spk, "spk");
+    expect_function_call(send_msg);
+    will_return(send_msg, true);
+    expect_function_call(send_msg);
+    will_return(send_msg, false);
+    process_P2P_OutgoingMessage(&sock);
+}
+
+void err_handle_P2P_Incoming()
+{
+    socket_handles_t sock;
+    sock.pipeline = 0;
+    sock.pubsub = 1;
+    numLoops = 1;
+    expect_function_call(check_inbox);
+    will_return(check_inbox, 0);
+    handle_P2P_Incoming(&sock);
+    assert_null(inMsgQ);
+}
+
+void err_process_P2P_IncomingMessage()
+{
+    socket_handles_t sock;
+    sock.pipeline = 1;
+    sock.pubsub = 0;
+    numLoops = 1;
+    expect_function_call(pthread_cond_wait);
+    process_P2P_IncomingMessage(&sock);
+}
+
+void err_process_P2P_OutgoingMessage()
+{
+    socket_handles_t sock;
+    sock.pipeline = 1;
+    sock.pubsub = 0;
+    numLoops = 1;
+    expect_function_call(pthread_cond_wait);
+    process_P2P_OutgoingMessage(&sock);
+}
+
 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
@@ -212,6 +294,10 @@ int main(void)
         cmocka_unit_test(test_process_P2P_IncomingMessage_spoke),
         cmocka_unit_test(test_add_P2P_OutgoingMessage),
         cmocka_unit_test(test_process_P2P_OutgoingMessage_hub),
+        cmocka_unit_test(test_process_P2P_OutgoingMessage_spoke),
+        cmocka_unit_test(err_handle_P2P_Incoming),
+        cmocka_unit_test(err_process_P2P_IncomingMessage),
+        cmocka_unit_test(err_process_P2P_OutgoingMessage),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
