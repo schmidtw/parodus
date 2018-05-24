@@ -67,6 +67,19 @@ void sendToAllRegisteredClients(void **resp_bytes, size_t resp_size)
     UNUSED(resp_bytes); UNUSED(resp_size);
     function_called();
 }
+
+void cleanup_sock(int *sock)
+{
+    UNUSED(sock);
+    function_called();
+}
+
+bool spoke_setup_pipeline(const char *pipeline_url, int *pipeline_sock)
+{
+    UNUSED(pipeline_url); UNUSED(pipeline_sock);
+    function_called();
+    return (bool)mock();
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
@@ -74,8 +87,8 @@ void sendToAllRegisteredClients(void **resp_bytes, size_t resp_size)
 void test_handle_P2P_Incoming_hub()
 {
     socket_handles_t sock;
-    sock.pipeline = 1;
-    sock.pubsub = 0;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
     numLoops = 2;
     notification = "Hello";
     strcpy(parodusCfg.hub_or_spk, "hub");
@@ -98,8 +111,8 @@ void test_handle_P2P_Incoming_hub()
 void test_handle_P2P_Incoming_spoke()
 {
     socket_handles_t sock;
-    sock.pipeline = 0;
-    sock.pubsub = 1;
+    sock.pipeline.sock = 0;
+    sock.pubsub.sock = 1;
     numLoops = 1;
     notification = "Welcome";
     strcpy(parodusCfg.hub_or_spk, "spk");
@@ -116,8 +129,8 @@ void test_handle_P2P_Incoming_spoke()
 void test_process_P2P_IncomingMessage_hub()
 {
     socket_handles_t sock;
-    sock.pipeline = 1;
-    sock.pubsub = 0;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
     numLoops = 2;
     strcpy(parodusCfg.hub_or_spk, "hub");
     expect_function_call(send_msg);
@@ -132,8 +145,8 @@ void test_process_P2P_IncomingMessage_hub()
 void test_process_P2P_IncomingMessage_spoke()
 {
     socket_handles_t sock;
-    sock.pipeline = 0;
-    sock.pubsub = 1;
+    sock.pipeline.sock = 0;
+    sock.pubsub.sock = 1;
     numLoops = 1;
     strcpy(parodusCfg.hub_or_spk, "spk");
     expect_function_call(sendToAllRegisteredClients);
@@ -173,8 +186,8 @@ void test_add_P2P_OutgoingMessage()
 void test_process_P2P_OutgoingMessage_hub()
 {
     socket_handles_t sock;
-    sock.pipeline = 1;
-    sock.pubsub = 0;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
     numLoops = 2;
     void *bytes = NULL;
     wrp_msg_t wrp_msg;
