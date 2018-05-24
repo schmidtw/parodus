@@ -32,6 +32,9 @@
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
+#define debug_error(...)      cimplog_error("producer", __VA_ARGS__)
+#define debug_info(...)       cimplog_info("producer", __VA_ARGS__)
+#define debug_print(...)      cimplog_debug("producer", __VA_ARGS__)
 
 
 #define SERVICE_NAME "producer"
@@ -108,12 +111,12 @@ int main( int argc, char **argv)
             break;
             case '?':
                 if (strchr(option_string, optopt)) {
-                    printf("%s Option %c requires an argument!\n", argv[0], optopt);
+                    debug_info("%s Option %c requires an argument!\n", argv[0], optopt);
                     _help(argv[0], NULL);
                     rv = -7;
                     break;
                 } else {
-                    printf("%s Unrecognized option %c\n", argv[0], optopt);
+                    debug_error("%s Unrecognized option %c\n", argv[0], optopt);
                   }
 
                 break;
@@ -135,17 +138,17 @@ int main( int argc, char **argv)
         rv = 0;
     } else {
         if ((NULL == cfg.parodus_url)) {
-            printf("%s parodus_url not specified!\n", argv[0]);
+            debug_error("%s parodus_url not specified!\n", argv[0]);
             rv = -1;
         }
         if ((NULL == cfg.client_url)) {
-            printf("%s client_url not specified !\n", argv[0]);
+            debug_error("%s client_url not specified !\n", argv[0]);
             rv = -2;
         }        
      }
     
     if (rv != 0) {
-        printf("%s  program terminating\n", argv[0]);
+        debug_info("%s  program terminating\n", argv[0]);
     }
 
     if( NULL != cfg.parodus_url )   free( (char*) cfg.parodus_url );
@@ -157,28 +160,28 @@ int main( int argc, char **argv)
 static void sig_handler(int sig)
 {
     if( sig == SIGINT ) {
-        printf("SIGINT received! Program Terminating!\n");
+        debug_info("SIGINT received! Program Terminating!\n");
         exit(0);
     } else if ( sig == SIGTERM ) {
-        printf("SIGTERM received! Program Terminating!\n");
+        debug_info("SIGTERM received! Program Terminating!\n");
         exit(0);
     } else if( sig == SIGUSR1 ) {
         signal(SIGUSR1, sig_handler); /* reset it to this function */
-        printf("SIGUSR1 received!\n");
+        debug_info("SIGUSR1 received!\n");
     } else if( sig == SIGUSR2 ) {
         signal(SIGUSR2, sig_handler);
-        printf("SIGUSR2 received!\n");
+        debug_info("SIGUSR2 received!\n");
     } else if( sig == SIGCHLD ) {
         signal(SIGCHLD, sig_handler); /* reset it to this function */
-        printf("SIGHLD received!\n");
+        debug_info("SIGHLD received!\n");
     } else if( sig == SIGPIPE ) {
         signal(SIGPIPE, sig_handler); /* reset it to this function */
-        printf("SIGPIPE received!\n");
+        debug_info("SIGPIPE received!\n");
     } else if( sig == SIGALRM ) {
         signal(SIGALRM, sig_handler); /* reset it to this function */
-        printf("SIGALRM received!\n");
+        debug_info("SIGALRM received!\n");
     } else {
-        printf("Signal %d received!\n", sig);
+        debug_info("Signal %d received!\n", sig);
         exit(0);
     }
 }
@@ -203,7 +206,7 @@ static int main_loop(libpd_cfg_t *cfg)
     while( true ) {
         rv = libparodus_init( &hpd, cfg );
         if( 0 != rv ) {
-            printf("Init for parodus (url %s): %d '%s'\n", cfg->parodus_url, rv, libparodus_strerror(rv) );	
+            debug_info("Init for parodus (url %s): %d '%s'\n", cfg->parodus_url, rv, libparodus_strerror(rv) );	
             backoff_retry_time = (1 << c) - 1;
             sleep(backoff_retry_time);
             c++;
@@ -215,7 +218,7 @@ static int main_loop(libpd_cfg_t *cfg)
           libparodus_shutdown(&hpd);
           continue;
         }  // else
-            printf("producer service registered with libparodus url %s\n", cfg->parodus_url);
+            debug_info("producer service registered with libparodus url %s\n", cfg->parodus_url);
             break;
     }
 
@@ -227,11 +230,11 @@ static int main_loop(libpd_cfg_t *cfg)
 	if (contentType) {
         strncpy(contentType, CONTENT_TYPE_JSON, strlen(CONTENT_TYPE_JSON) + 1);
     } else {
-        printf("Hell Froze over! Malloc failed!\n");
+        debug_print("Hell Froze over! Malloc failed!\n");
         exit (-911);
     } 
     
-    printf("starting the main loop...\n");
+    debug_print("starting the main loop...\n");
     do {
         struct timespec tm;
         time_t unix_time = 0;
@@ -247,7 +250,7 @@ static int main_loop(libpd_cfg_t *cfg)
 	cJSON_AddStringToObject(response, "device_id", mac_address);
 	cJSON_AddStringToObject(response, "timestamp", time_str);
         str = cJSON_PrintUnformatted(response);
-        printf("Payload Response: %s\n", str);
+        debug_info("Payload Response: %s\n", str);
 
         memset(&wrp_msg, 0, sizeof(wrp_msg_t));
         wrp_msg.msg_type = WRP_MSG_TYPE__EVENT;     
@@ -261,9 +264,9 @@ static int main_loop(libpd_cfg_t *cfg)
         
         rv = libparodus_send(hpd, &wrp_msg);
         if (0 == rv) {
-            printf("producer sent message with no errors\n");
+            debug_info("producer sent message with no errors\n");
         } else {
-             printf("producer send error %d\n", rv);
+             debug_error("producer send error %d\n", rv);
         }
 
         sleep(send_period);
@@ -275,13 +278,13 @@ static int main_loop(libpd_cfg_t *cfg)
                 char *bytes = NULL;
                 ssize_t n = wrp_struct_to(msg, WRP_STRING, (void **) &bytes);
                 if (n > 0) {
-                    printf("**Producer Got**: \n%s", bytes);
+                    debug_info("**Producer Got**: \n%s", bytes);
                     free(bytes);
                 } else {
-		printf("Service Producer Memory Error on WRP message conversion\n");
-                printf("wrp_msg->src %s\n",(char *)msg->u.crud.source);
-                printf("wrp_msg->dest %s\n",(char *)msg->u.crud.dest);                
-                printf("wrp_msg->u.req.payload %s\n",(char *)msg->u.crud.payload);
+		debug_info("Service Producer Memory Error on WRP message conversion\n");
+                debug_info("wrp_msg->src %s\n",(char *)msg->u.crud.source);
+                debug_info("wrp_msg->dest %s\n",(char *)msg->u.crud.dest);                
+                debug_info("wrp_msg->u.req.payload %s\n",(char *)msg->u.crud.payload);
                 }
             }
         }
@@ -289,7 +292,7 @@ static int main_loop(libpd_cfg_t *cfg)
     } while (true);
 
     (void ) libparodus_shutdown(&hpd);
-    printf("End of producer\n");
+    debug_print("End of producer\n");
     return 0;
 }
 
