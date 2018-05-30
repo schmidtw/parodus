@@ -73,6 +73,14 @@ void sendToAllRegisteredClients(void **resp_bytes, size_t resp_size)
     function_called();
 }
 
+void handle_upstream(void *args)
+{
+    UNUSED(args);
+}
+
+void processUpstreamMessage()
+{
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
