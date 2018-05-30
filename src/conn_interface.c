@@ -93,8 +93,8 @@ void createSocketConnection(void (* initKeypress)())
     packMetaData();
     
     UpStreamMsgQ = NULL;
-    StartThread(handle_upstream, NULL);
-    StartThread(processUpstreamMessage, NULL);
+    //StartThread(handle_upstream, NULL);
+    //StartThread(processUpstreamMessage, NULL);
     ParodusMsgQ = NULL;
     StartThread(messageHandlerTask, NULL);
     StartThread(serviceAliveTask, NULL);
@@ -110,20 +110,25 @@ void createSocketConnection(void (* initKeypress)())
 
     char *pipelineURL = PIPELINE_URL;
     char *pubsubURL = PUBSUB_URL;
+    char *parodusURL = PARODUS_UPSTREAM;
     if(NULL != get_parodus_cfg()->pipeline_url) {
 	pipelineURL = get_parodus_cfg()->pipeline_url;
     }
     if(NULL != get_parodus_cfg()->pubsub_url) {
 	pubsubURL = get_parodus_cfg()->pubsub_url;
     }
-    
+    if(NULL != get_parodus_cfg()->local_url) {
+	    parodusURL = get_parodus_cfg()->local_url;
+    }
     if( 0 == strncmp(HUB_STR, get_parodus_cfg()->hub_or_spk, sizeof(HUB_STR)) ) {
         hub_setup(pipelineURL, pubsubURL, &sock.pipeline, &sock.pubsub);
     } else if( 0 == strncmp(SPK_STR, get_parodus_cfg()->hub_or_spk, sizeof(SPK_STR)) ) {
         spoke_setup(pipelineURL, pubsubURL, NULL, &sock.pipeline, &sock.pubsub);
     }
+    parodus_setup(parodusURL, &sock.local);
+
     StartThread(handle_and_process_P2P_messages, &sock);
-    
+
     do
     {
         nopoll_loop_wait(ctx, 5000000);

@@ -28,6 +28,7 @@ typedef struct _socket_handles
 {
         int pipeline;
         int pubsub;
+        int local;
 } socket_handles_t;
 
 /*----------------------------------------------------------------------------*/

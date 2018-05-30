@@ -114,14 +114,10 @@ void process_P2P_OutgoingMessage(void *args)
     ParodusPrint("****** %s *******\n",__FUNCTION__);
 
     p_sock = (socket_handles_t *) args;
-    pthread_mutex_lock (&outMsgQ_mut);
-    ParodusPrint("mutex lock in consumer thread\n");
     if(outMsgQ != NULL)
     {
         P2P_Msg *message = outMsgQ;
         outMsgQ = outMsgQ->next;
-        pthread_mutex_unlock (&outMsgQ_mut);
-        ParodusPrint("mutex unlock in consumer thread\n");
         ParodusInfo("process_P2P_OutgoingMessage - message->msg = %p, message->len = %zd\n", message->msg, message->len);
         if (0 == strncmp("hub", get_parodus_cfg()->hub_or_spk, 3) )
         {
@@ -151,11 +147,6 @@ void process_P2P_OutgoingMessage(void *args)
         free(message);
         message = NULL;
     }
-    else
-    {
-        pthread_mutex_unlock (&outMsgQ_mut);
-        ParodusPrint("mutex unlock in consumer thread after cond wait\n");
-    }
 }
 
 void add_P2P_OutgoingMessage(void **message, size_t len)
@@ -174,13 +165,9 @@ void add_P2P_OutgoingMessage(void **message, size_t len)
         outMsg->msg = bytes;
         outMsg->len = len;
         outMsg->next = NULL;
-        pthread_mutex_lock (&outMsgQ_mut);
         if(outMsgQ == NULL)
         {
             outMsgQ = outMsg;
-            ParodusPrint("Producer added message\n");
-            pthread_mutex_unlock (&outMsgQ_mut);
-            ParodusPrint("mutex unlock in producer thread\n");
         }
         else
         {
@@ -190,7 +177,6 @@ void add_P2P_OutgoingMessage(void **message, size_t len)
                 temp = temp->next;
             }
             temp->next = outMsg;
-            pthread_mutex_unlock (&outMsgQ_mut);
         }
     }
     else
@@ -204,6 +190,8 @@ void *handle_and_process_P2P_messages(void *args)
     ParodusInfo("****** %s *******\n",__FUNCTION__);
     while( FOREVER() )
     {
+        handle_upstream(args);
+        processUpstreamMessage();
         process_P2P_OutgoingMessage(args);
         handle_P2P_Incoming(args);
         process_P2P_IncomingMessage(args);
