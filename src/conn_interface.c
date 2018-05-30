@@ -122,9 +122,7 @@ void createSocketConnection(void (* initKeypress)())
     } else if( 0 == strncmp(SPK_STR, get_parodus_cfg()->hub_or_spk, sizeof(SPK_STR)) ) {
         spoke_setup(pipelineURL, pubsubURL, NULL, &sock.pipeline, &sock.pubsub);
     }
-    StartThread(handle_P2P_Incoming, &sock);
-    StartThread(process_P2P_IncomingMessage, &sock);
-    StartThread(process_P2P_OutgoingMessage, &sock);
+    StartThread(handle_and_process_P2P_messages, &sock);
     
     do
     {

@@ -34,15 +34,9 @@ typedef struct _socket_handles
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
 
-// Producer thread to pull and add P2P Incoming queue items 
+//Thread to pull, add and process P2P Incoming/Outgoing queue items 
 // from the peer 2 peer pipe
-void *handle_P2P_Incoming();
-
-// Consumer thread to process the P2P Incoming queue items 
-void *process_P2P_IncomingMessage();
-
-// Consumer thread to process the P2P Outgoing queue items 
-void *process_P2P_OutgoingMessage();
+void *handle_and_process_P2P_messages(void *args);
 
 // Add outgoing messages to the P2P Outgoing queue
 void add_P2P_OutgoingMessage(void **message, size_t len);
