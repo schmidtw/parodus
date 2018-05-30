@@ -33,6 +33,11 @@ extern P2P_Msg *inMsgQ;
 static ParodusCfg parodusCfg;
 int numLoops;
 char *notification;
+
+extern void handle_P2P_Incoming(void *args);
+extern void process_P2P_IncomingMessage(void *args);
+extern void process_P2P_OutgoingMessage(void *args);
+
 /*----------------------------------------------------------------------------*/
 /*                                   Mocks                                    */
 /*----------------------------------------------------------------------------*/
@@ -68,13 +73,6 @@ void sendToAllRegisteredClients(void **resp_bytes, size_t resp_size)
     function_called();
 }
 
-int pthread_cond_wait(pthread_cond_t *restrict cond,
-pthread_mutex_t *restrict mutex)
-{
-    UNUSED(cond); UNUSED(mutex);
-    function_called();
-    return 0;
-}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
@@ -84,16 +82,18 @@ void test_handle_P2P_Incoming_hub()
     socket_handles_t sock;
     sock.pipeline = 1;
     sock.pubsub = 0;
-    numLoops = 2;
     notification = "Hello";
     strcpy(parodusCfg.hub_or_spk, "hub");
     expect_function_call(check_inbox);
     will_return(check_inbox, 6);
     expect_function_call(free_msg);
+    handle_P2P_Incoming((void *)&sock);
+
     expect_function_call(check_inbox);
     will_return(check_inbox, 6);
     expect_function_call(free_msg);
     handle_P2P_Incoming((void *)&sock);
+
     assert_non_null(inMsgQ);
     assert_int_equal(6, inMsgQ->len);
     assert_non_null(inMsgQ->next);
@@ -108,7 +108,6 @@ void test_handle_P2P_Incoming_spoke()
     socket_handles_t sock;
     sock.pipeline = 0;
     sock.pubsub = 1;
-    numLoops = 1;
     notification = "Welcome";
     strcpy(parodusCfg.hub_or_spk, "spk");
     expect_function_call(check_inbox);
@@ -126,11 +125,12 @@ void test_process_P2P_IncomingMessage_hub()
     socket_handles_t sock;
     sock.pipeline = 1;
     sock.pubsub = 0;
-    numLoops = 2;
     strcpy(parodusCfg.hub_or_spk, "hub");
     expect_function_call(send_msg);
     will_return(send_msg, true);
     expect_function_call(sendToAllRegisteredClients);
+    process_P2P_IncomingMessage(&sock);
+
     expect_function_call(send_msg);
     will_return(send_msg, false);
     expect_function_call(sendToAllRegisteredClients);
@@ -142,7 +142,6 @@ void test_process_P2P_IncomingMessage_spoke()
     socket_handles_t sock;
     sock.pipeline = 0;
     sock.pubsub = 1;
-    numLoops = 1;
     strcpy(parodusCfg.hub_or_spk, "spk");
     expect_function_call(sendToAllRegisteredClients);
     process_P2P_IncomingMessage(&sock);
@@ -223,11 +222,12 @@ void test_process_P2P_OutgoingMessage_hub()
     socket_handles_t sock;
     sock.pipeline = 1;
     sock.pubsub = 0;
-    numLoops = 2;
 
     strcpy(parodusCfg.hub_or_spk, "hub");
     expect_function_call(send_msg);
     will_return(send_msg, true);
+    process_P2P_OutgoingMessage(&sock);
+
     expect_function_call(send_msg);
     will_return(send_msg, false);
     process_P2P_OutgoingMessage(&sock);
@@ -238,11 +238,12 @@ void test_process_P2P_OutgoingMessage_spoke()
     socket_handles_t sock;
     sock.pipeline = 0;
     sock.pubsub = 1;
-    numLoops = 2;
 
     strcpy(parodusCfg.hub_or_spk, "spk");
     expect_function_call(send_msg);
     will_return(send_msg, true);
+    process_P2P_OutgoingMessage(&sock);
+
     expect_function_call(send_msg);
     will_return(send_msg, false);
     process_P2P_OutgoingMessage(&sock);
@@ -253,7 +254,6 @@ void err_handle_P2P_Incoming()
     socket_handles_t sock;
     sock.pipeline = 0;
     sock.pubsub = 1;
-    numLoops = 1;
     expect_function_call(check_inbox);
     will_return(check_inbox, 0);
     handle_P2P_Incoming(&sock);
@@ -265,8 +265,6 @@ void err_process_P2P_IncomingMessage()
     socket_handles_t sock;
     sock.pipeline = 1;
     sock.pubsub = 0;
-    numLoops = 1;
-    expect_function_call(pthread_cond_wait);
     process_P2P_IncomingMessage(&sock);
 }
 
@@ -275,8 +273,6 @@ void err_process_P2P_OutgoingMessage()
     socket_handles_t sock;
     sock.pipeline = 1;
     sock.pubsub = 0;
-    numLoops = 1;
-    expect_function_call(pthread_cond_wait);
     process_P2P_OutgoingMessage(&sock);
 }
 
