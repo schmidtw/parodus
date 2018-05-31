@@ -127,7 +127,7 @@ void createSocketConnection(void (* initKeypress)())
     }
     parodus_setup(parodusURL, &sock.local);
 
-    StartThread(handle_and_process_P2P_messages, &sock);
+    StartThread(handle_and_process_message, &sock);
 
     do
     {

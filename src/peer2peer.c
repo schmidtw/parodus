@@ -12,7 +12,6 @@
 #include "upstream.h"
 #include "parodus_interface.h"
 #include "peer2peer.h"
-#include "thread_tasks.h"
 
 P2P_Msg *inMsgQ = NULL;
 P2P_Msg *outMsgQ = NULL;
@@ -178,20 +177,4 @@ void add_P2P_OutgoingMessage(void **message, size_t len)
     {
         ParodusError("Failed in memory allocation\n");
     }
-}
-
-void *handle_and_process_P2P_messages(void *args)
-{
-    ParodusInfo("****** %s *******\n",__FUNCTION__);
-    while( FOREVER() )
-    {
-        messageHandlerTask();
-        CRUDHandlerTask();
-        handle_upstream(args);
-        processUpstreamMessage();
-        process_P2P_OutgoingMessage(args);
-        handle_P2P_Incoming(args);
-        process_P2P_IncomingMessage(args);
-    }
-    return NULL;
 }

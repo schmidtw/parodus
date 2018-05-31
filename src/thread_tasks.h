@@ -38,6 +38,9 @@ extern pthread_cond_t g_cond;
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
 
+//Thread to pull, add and process messages
+void *handle_and_process_message(void *args);
+
 void messageHandlerTask();
 
 #ifdef __cplusplus

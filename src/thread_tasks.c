@@ -18,6 +18,8 @@
 #include "downstream.h"
 #include "ParodusInternal.h"
 #include "client_list.h"
+#include "peer2peer.h"
+#include "upstream.h"
 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
@@ -48,6 +50,21 @@ void messageHandlerTask()
     ParodusPrint ("Ended messageHandlerTask\n");
 }
 
+void *handle_and_process_message(void *args)
+{
+    ParodusInfo("****** %s *******\n",__FUNCTION__);
+    while( FOREVER() )
+    {
+        messageHandlerTask();
+        CRUDHandlerTask();
+        handle_upstream(args);
+        processUpstreamMessage();
+        process_P2P_OutgoingMessage(args);
+        handle_P2P_Incoming(args);
+        process_P2P_IncomingMessage(args);
+    }
+    return NULL;
+}
 /*----------------------------------------------------------------------------*/
 /*                             Internal functions                             */
 /*----------------------------------------------------------------------------*/

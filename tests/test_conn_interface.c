@@ -72,8 +72,6 @@ void packMetaData()
     function_called();
 }
 
-
-
 void handle_upstream(void *args)
 {
     UNUSED(args);
@@ -81,11 +79,6 @@ void handle_upstream(void *args)
 
 void processUpstreamMessage()
 {
-}
-
-void *messageHandlerTask()
-{
-    return NULL;
 }
 
 void *serviceAliveTask()
@@ -183,6 +176,12 @@ bool delete_client_subscriptions(char *service_name)
 {
     UNUSED(service_name);
     return true;
+}
+
+void *handle_and_process_message(void *args)
+{
+    UNUSED(args);
+    return NULL;
 }
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */

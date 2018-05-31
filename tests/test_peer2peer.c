@@ -31,12 +31,7 @@
 extern P2P_Msg *outMsgQ;
 extern P2P_Msg *inMsgQ;
 static ParodusCfg parodusCfg;
-int numLoops;
 char *notification;
-
-extern void handle_P2P_Incoming(void *args);
-extern void process_P2P_IncomingMessage(void *args);
-extern void process_P2P_OutgoingMessage(void *args);
 
 /*----------------------------------------------------------------------------*/
 /*                                   Mocks                                    */
@@ -73,22 +68,6 @@ void sendToAllRegisteredClients(void **resp_bytes, size_t resp_size)
     function_called();
 }
 
-void handle_upstream(void *args)
-{
-    UNUSED(args);
-}
-
-void processUpstreamMessage()
-{
-}
-
-void messageHandlerTask()
-{
-}
-
-void CRUDHandlerTask()
-{
-}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
