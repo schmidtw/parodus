@@ -57,12 +57,6 @@ void listenerOnMessage(void * msg, size_t msgSize )
     function_called();
 }
 
-int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex)
-{
-    UNUSED(cond); UNUSED(mutex);
-    function_called();
-    return (int)mock();
-}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
@@ -86,8 +80,6 @@ void test_messageHandlerTask()
 void err_messageHandlerTask()
 {
     numLoops = 1;
-    will_return(pthread_cond_wait, 0);
-    expect_function_call(pthread_cond_wait);
     
     messageHandlerTask();
 }

@@ -97,7 +97,7 @@ void parStrncpy(char *destStr, const char *srcStr, size_t destSize);
 
 char* getWebpaConveyHeader();
 
-void *CRUDHandlerTask();
+void CRUDHandlerTask();
 void addCRUDmsgToQueue(wrp_msg_t *crudMsg);
 
 #ifdef __cplusplus

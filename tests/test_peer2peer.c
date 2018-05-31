@@ -81,6 +81,14 @@ void handle_upstream(void *args)
 void processUpstreamMessage()
 {
 }
+
+void messageHandlerTask()
+{
+}
+
+void CRUDHandlerTask()
+{
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/

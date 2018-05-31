@@ -193,6 +193,13 @@ bool send_msg(int sock, const void *msg, size_t size)
     function_called();
     return (bool)mock();
 }
+void messageHandlerTask()
+{
+}
+
+void CRUDHandlerTask()
+{
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/

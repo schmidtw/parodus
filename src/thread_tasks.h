@@ -38,7 +38,7 @@ extern pthread_cond_t g_cond;
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
 
-void *messageHandlerTask();
+void messageHandlerTask();
 
 #ifdef __cplusplus
 }

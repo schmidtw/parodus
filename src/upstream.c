@@ -48,10 +48,6 @@ size_t metaPackSize=-1;
 
 UpStreamMsg *UpStreamMsgQ = NULL;
 
-pthread_mutex_t nano_mut=PTHREAD_MUTEX_INITIALIZER;
-
-pthread_cond_t nano_con=PTHREAD_COND_INITIALIZER;
-
 UpStreamMsg * get_global_UpStreamMsgQ(void)
 {
     return UpStreamMsgQ;
@@ -60,16 +56,6 @@ UpStreamMsg * get_global_UpStreamMsgQ(void)
 void set_global_UpStreamMsgQ(UpStreamMsg * UpStreamQ)
 {
     UpStreamMsgQ = UpStreamQ;
-}
-
-pthread_cond_t *get_global_nano_con(void)
-{
-    return &nano_con;
-}
-
-pthread_mutex_t *get_global_nano_mut(void)
-{
-    return &nano_mut;
 }
 
 /*----------------------------------------------------------------------------*/

@@ -96,9 +96,9 @@ void createSocketConnection(void (* initKeypress)())
     //StartThread(handle_upstream, NULL);
     //StartThread(processUpstreamMessage, NULL);
     ParodusMsgQ = NULL;
-    StartThread(messageHandlerTask, NULL);
+    //StartThread(messageHandlerTask, NULL);
     StartThread(serviceAliveTask, NULL);
-    StartThread(CRUDHandlerTask, NULL);
+    //StartThread(CRUDHandlerTask, NULL);
 
     if (NULL != initKeypress) 
     {

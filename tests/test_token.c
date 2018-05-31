@@ -165,9 +165,8 @@ void addCRUDmsgToQueue(wrp_msg_t *crudMsg)
 	return;
 }
 
-void *CRUDHandlerTask()
+void CRUDHandlerTask()
 {
-	return NULL;
 }
 
 int setup_test_jwts (void)
