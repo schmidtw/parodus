@@ -20,6 +20,7 @@
 #include "client_list.h"
 #include "peer2peer.h"
 #include "upstream.h"
+#include "time.h"
 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
@@ -53,8 +54,13 @@ void messageHandlerTask()
 void *handle_and_process_message(void *args)
 {
     ParodusInfo("****** %s *******\n",__FUNCTION__);
+    uint64_t startTime = 0, endTime = 0;
+    struct timespec start, end;
+    uint32_t diffTime = 0;
+
     while( FOREVER() )
     {
+        startTime = getCurrentTimeInMicroSeconds(&start);
         messageHandlerTask();
         CRUDHandlerTask();
         handle_upstream(args);
@@ -62,6 +68,14 @@ void *handle_and_process_message(void *args)
         process_P2P_OutgoingMessage(args);
         handle_P2P_Incoming(args);
         process_P2P_IncomingMessage(args);
+        endTime = getCurrentTimeInMicroSeconds(&end);
+        diffTime = endTime - startTime;
+        ParodusPrint("Elapsed time : %lu \n", diffTime);
+        if(diffTime < 500000)
+        {
+            ParodusPrint("Sleeping for 1 s\n");
+            sleep(1);
+        }
     }
     return NULL;
 }

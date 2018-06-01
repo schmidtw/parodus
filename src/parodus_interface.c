@@ -182,7 +182,6 @@ ssize_t check_inbox(int sock, void **notification)
     int msg_sz = 0;
 
     msg_sz = nn_recv(sock, &msg, NN_MSG, NN_DONTWAIT);
-    sleep(5);
     if( msg_sz < 0 && errno != EAGAIN ) {
         ParodusError("Receive error %d, %d(%s)\n", msg_sz, errno, strerror(errno));
     } 

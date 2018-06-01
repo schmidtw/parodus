@@ -258,7 +258,7 @@ target_link_libraries (test_downstream_more -lcmocka ${PARODUS_COMMON_LIBS} )
 #   test_thread_tasks
 #-------------------------------------------------------------------------------
 add_test(NAME test_thread_tasks COMMAND ${MEMORY_CHECK} ./test_thread_tasks)
-add_executable(test_thread_tasks test_thread_tasks.c ../src/thread_tasks.c)
+add_executable(test_thread_tasks test_thread_tasks.c ../src/thread_tasks.c ../src/time.c)
 target_link_libraries (test_thread_tasks -lcmocka ${PARODUS_COMMON_LIBS} )
 
 #-------------------------------------------------------------------------------
