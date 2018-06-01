@@ -77,6 +77,7 @@ void test_push_pull()
         if( true == result ) {
             break;
         }
+        sleep(1);
     }
     cleanup_sock(&pipeline_sock);
 }
@@ -120,7 +121,6 @@ static void *check_hub()
     ssize_t msg_sz = 0;
 
     hub_setup_pipeline( PIPELINE, &pipeline_sock );
-    sleep(5);
     for( ;; ) {
         msg_sz = check_inbox(pipeline_sock, (void **)&msg);
         if( 0 < msg_sz ) {
@@ -130,6 +130,7 @@ static void *check_hub()
             free_msg(msg);
             break;
         }
+        sleep(1);
     }
     cleanup_sock(&pipeline_sock);
     return NULL;
