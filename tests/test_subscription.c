@@ -189,6 +189,11 @@ void err_delete_client_subscriptions()
     delete_client_subscriptions(&data);
     assert( 0 == data.delete_count);
 }
+
+void err_init_subscription()
+{
+    init_subscription_list();
+}
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -207,6 +212,7 @@ int main(void)
         cmocka_unit_test(err_get_Client_Subscriptions),
         cmocka_unit_test(err_filter_clients_and_send),
         cmocka_unit_test(err_delete_client_subscriptions),
+        cmocka_unit_test(err_init_subscription),
     };
 
     ret =  cmocka_run_group_tests(tests, NULL, NULL);

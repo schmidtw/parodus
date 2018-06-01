@@ -121,12 +121,12 @@ int main( int argc, char **argv)
                 break;
             case '?':
                 if (strchr(option_string, optopt)) {
-                    printf("%s Option %c requires an argument!\n", argv[0], optopt);
+                    debug_info("%s Option %c requires an argument!\n", argv[0], optopt);
                     _help(argv[0], NULL);
                     rv = -7;
                     break;
                 } else {
-                    printf("%s Unrecognized option %c\n", argv[0], optopt);
+                    debug_info("%s Unrecognized option %c\n", argv[0], optopt);
                   }
 
                 break;
@@ -218,19 +218,19 @@ void subscribeToEvent(char *regex, const char *service_name){
 	}
 	else
 	{
-		printf("In subscribeToEvent() - malloc Failed !!!");
+		debug_error("In subscribeToEvent() - malloc Failed !!!");
 	}
 	
 	snprintf(source,127,"mac:%s/%s", mac_address, service_name);
 	snprintf(dest,127,"mac:%s/%s/%s", mac_address, "parodus","subscribe");
-	printf("source is %s\n",source);
-	printf("dest is %s\n",dest);	
+	debug_print("source is %s\n",source);
+	debug_print("dest is %s\n",dest);	
 	response = cJSON_CreateObject();
 	//cJSON_AddItemToObject(response, service_name, parameters = cJSON_CreateObject());
 	cJSON_AddStringToObject(response, service_name, regex);
 
 	str = cJSON_PrintUnformatted(response);
-    printf("Payload Response: %s\n", str);
+    debug_info("Payload Response: %s\n", str);
 
 	res_wrp_msg->msg_type = WRP_MSG_TYPE__CREATE;
 	res_wrp_msg->u.crud.payload = (void *)str;
@@ -249,18 +249,18 @@ void subscribeToEvent(char *regex, const char *service_name){
 	else
 	{
 		free(res_wrp_msg);
-		printf("In subscribeToEvent() - malloc Failed !!!");
+		debug_error("In subscribeToEvent() - malloc Failed !!!");
 	}
 
 	sendStatus = libparodus_send(hpd_instance, res_wrp_msg);
-	printf("sendStatus is %d\n", sendStatus);
+	debug_print("sendStatus is %d\n", sendStatus);
 	if (sendStatus == 0)
 	{
-		printf("Sent message successfully to parodus\n");
+		debug_info("Sent message successfully to parodus\n");
 	}
 	else
 	{
-		printf("libparodus_send() Failed to send message: '%s'\n", libparodus_strerror(sendStatus));
+		debug_error("libparodus_send() Failed to send message: '%s'\n", libparodus_strerror(sendStatus));
 	}
 }
 
@@ -285,7 +285,7 @@ static int main_loop(libpd_cfg_t *cfg, bool isSubscribed)
                 backoff_retry_time = 0;
             }
         } else {
-            printf("%s service registered with libparodus url %s\n", cfg->service_name, cfg->parodus_url);
+            debug_info("%s service registered with libparodus url %s\n", cfg->service_name, cfg->parodus_url);
             break;
         }
         libparodus_shutdown(&hpd_instance);
@@ -305,21 +305,21 @@ static int main_loop(libpd_cfg_t *cfg, bool isSubscribed)
             char *bytes = NULL;
             ssize_t n = wrp_struct_to(wrp_msg, WRP_STRING, (void **) &bytes);
             if (n > 0) {
-                printf("\n%s", bytes);
-		printf("wrp_msg->u.event.payload %s\n",(char *)wrp_msg->u.event.payload);
+                debug_print("\n%s", bytes);
+		debug_info("wrp_msg->u.event.payload %s\n",(char *)wrp_msg->u.event.payload);
                 free(bytes);
             } else {
-                printf("Service Printer Memory Error on WRP message conversion\n");
-		printf("wrp_msg->src %s\n",(char *)wrp_msg->u.crud.source);
-                printf("wrp_msg->dest %s\n",(char *)wrp_msg->u.crud.dest);                
-                printf("wrp_msg->u.req.payload %s\n",(char *)wrp_msg->u.crud.payload);
+                debug_print("Service Printer Memory Error on WRP message conversion\n");
+		debug_print("wrp_msg->src %s\n",(char *)wrp_msg->u.crud.source);
+                debug_print("wrp_msg->dest %s\n",(char *)wrp_msg->u.crud.dest);                
+                debug_print("wrp_msg->u.req.payload %s\n",(char *)wrp_msg->u.crud.payload);
             }
             
         } else if( 1 == rv || 2 == rv ) {
-            printf("Timed out or message closed.\n");
+            debug_print("Timed out or message closed.\n");
             continue;
         } else {
-            printf("Libparodus failed to receive message: '%s'\n",libparodus_strerror(rv));
+            debug_error("Libparodus failed to receive message: '%s'\n",libparodus_strerror(rv));
         }
 
         if( (NULL != wrp_msg) && (2 != rv) ) {
