@@ -147,7 +147,8 @@ void *process_P2P_OutgoingMessage(void *args)
     bool status = false;
     socket_handles_t *p_sock;
     uint32_t retry_time = 0;
-    uint32_t c = 2;
+    int c = 2;
+    int max = get_parodus_cfg()->webpa_backoff_max;
 
     ParodusInfo("****** %s *******\n",__FUNCTION__);
 
@@ -199,7 +200,10 @@ void *process_P2P_OutgoingMessage(void *args)
                                 status = spoke_setup_pipeline(p_sock->pipeline.url, &p_sock->pipeline.sock);
                                 if( status == false )
                                 {
-                                    retry_time = (int) pow(2, c++) - 1;
+                                    if( c <= max )
+                                    {
+                                        retry_time = (int) pow(2, c++) - 1;
+                                    }
                                     ParodusError("Failed to spoke setup pipeline, retrying in %u seconds\n", retry_time);
                                     sleep(retry_time);
                                 }
