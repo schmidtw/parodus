@@ -28,8 +28,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-#define HUB   "tcp://127.0.0.1:7777"
-#define SPOKE "tcp://127.0.0.1:8888"
+#define PIPELINE "tcp://127.0.0.1:8888"
 
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
@@ -50,14 +49,9 @@ static void *check_hub();
 /*----------------------------------------------------------------------------*/
 static test_t tests[] = {
     {   // 0 
-        .d = HUB,
+        .d = PIPELINE,
         .n = "Some binary",
         .nsz = 11,
-    },
-    {   // 1 
-        .d = SPOKE,
-        .n = "Some other binary",
-        .nsz = 17,
     },
 };
 
@@ -72,20 +66,20 @@ static test_t tests[] = {
 void test_push_pull()
 {
     pthread_t t;
-    int pipeline_sock, pubsub_sock;
+    int pipeline_sock;
     bool result;
 
     pthread_create(&t, NULL, check_hub, NULL);
 
-    spoke_setup( SPOKE, HUB, NULL, &pipeline_sock, &pubsub_sock );
+    spoke_setup_pipeline( PIPELINE, &pipeline_sock );
     for( ;; ) {
         result = send_msg(pipeline_sock, tests[0].n, tests[0].nsz);
         if( true == result ) {
             break;
         }
+        sleep(1);
     }
-    sock_cleanup(pipeline_sock);
-    sock_cleanup(pubsub_sock);
+    cleanup_sock(&pipeline_sock);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -122,12 +116,11 @@ int main(void)
 /*----------------------------------------------------------------------------*/
 static void *check_hub()
 {
-    int pipeline_sock, pubsub_sock;
+    int pipeline_sock;
     char *msg = NULL;
     ssize_t msg_sz = 0;
 
-    hub_setup( SPOKE, HUB, &pipeline_sock, &pubsub_sock );
-    sleep(5);
+    hub_setup_pipeline( PIPELINE, &pipeline_sock );
     for( ;; ) {
         msg_sz = check_inbox(pipeline_sock, (void **)&msg);
         if( 0 < msg_sz ) {
@@ -137,8 +130,8 @@ static void *check_hub()
             free_msg(msg);
             break;
         }
+        sleep(1);
     }
-    sock_cleanup(pipeline_sock);
-    sock_cleanup(pubsub_sock);
+    cleanup_sock(&pipeline_sock);
     return NULL;
 }

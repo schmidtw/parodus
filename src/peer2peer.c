@@ -33,12 +33,13 @@ void *handle_P2P_Incoming(void *args)
     socket_handles_t *p_sock;
     ParodusPrint("****** %s *******\n",__FUNCTION__);
     int msgAdded=0;
+
     p_sock = (socket_handles_t *) args;
     while( FOREVER() )
     {
 	    if (0 == strncmp("hub", get_parodus_cfg()->hub_or_spk, 3) ) 
 	    {
-            	l = check_inbox(p_sock->pipeline, &ptr);
+            	l = check_inbox(p_sock->pipeline.sock, &ptr);
 		if (l > 0 && ptr != NULL)
 		{
 			inMsg = (P2P_Msg *)malloc(sizeof(P2P_Msg));
@@ -52,7 +53,7 @@ void *handle_P2P_Incoming(void *args)
 	    } 
 	    else 
 	    {
-		l = check_inbox(p_sock->pubsub, &ptr);
+		l = check_inbox(p_sock->pubsub.sock, &ptr);
 		if (l > 0 && ptr != NULL)
 		{
 			inMsg = (P2P_Msg *)malloc(sizeof(P2P_Msg));
@@ -93,7 +94,6 @@ void *handle_P2P_Incoming(void *args)
 
 void *process_P2P_IncomingMessage(void *args)
 {
-    int rv=-1; (void) rv;
     bool status;
     socket_handles_t *p_sock;
     ParodusPrint("****** %s *******\n",__FUNCTION__);
@@ -112,7 +112,7 @@ void *process_P2P_IncomingMessage(void *args)
 			// For incoming of type HUB, use hub_send_msg() to propagate message to hardcoded spoke
 			if (0 == strncmp("hub", get_parodus_cfg()->hub_or_spk, 3) )
 			{
-		            status = send_msg(p_sock->pubsub, message->msg, message->len);
+		            status = send_msg(p_sock->pubsub.sock, message->msg, message->len);
 		            if(status == true)
 		            {
 		                ParodusInfo("Successfully sent event to spoke\n");
@@ -143,9 +143,13 @@ void *process_P2P_IncomingMessage(void *args)
 **/
 void *process_P2P_OutgoingMessage(void *args)
 {
-    int rv=-1; (void) rv;
-    bool status;
+    static uint8_t num_fail = 0;
+    bool status = false;
     socket_handles_t *p_sock;
+    uint32_t retry_time = 0;
+    int c = 2;
+    int max = get_parodus_cfg()->webpa_backoff_max;
+
     ParodusInfo("****** %s *******\n",__FUNCTION__);
 
     p_sock = (socket_handles_t *) args;
@@ -160,31 +164,56 @@ void *process_P2P_OutgoingMessage(void *args)
             pthread_mutex_unlock (&outMsgQ_mut);
             ParodusPrint("mutex unlock in consumer thread\n");
             ParodusInfo("process_P2P_OutgoingMessage - message->msg = %p, message->len = %zd\n", message->msg, message->len);
-		    if (0 == strncmp("hub", get_parodus_cfg()->hub_or_spk, 3) )
+	    if (0 == strncmp("hub", get_parodus_cfg()->hub_or_spk, 3) )
+	    {
+                    ParodusInfo("Just before hub send message\n");
+	            status = send_msg(p_sock->pubsub.sock, message->msg, message->len);
+	            if(status == true)
+	            {
+	                ParodusInfo("Successfully sent event to spoke\n");
+	            }
+	            else
+	            {
+	                ParodusError("Failed to send event to spoke\n");
+	            }
+	    }
+	    else
+	    {
+                    status = send_msg(p_sock->pipeline.sock, message->msg, message->len);
+		    if( status == true )
 		    {
-                            ParodusInfo("Just before hub send message\n");
-		            status = send_msg(p_sock->pubsub, message->msg, message->len);
-		            if(status == true)
-		            {
-		                ParodusInfo("Successfully sent event to spoke\n");
-		            }
-		            else
-		            {
-		                ParodusError("Failed to send event to spoke\n");
-		            }
-		     }
-		     else
-		     {
-		            status = send_msg(p_sock->pipeline, message->msg, message->len);
-		            if(status == true)
-		            {
-		                ParodusInfo("Successfully sent event to hub\n");
-		            }
-		            else
-		            {
-		                ParodusError("Failed to send event to hub\n");
-		            }
-		     }
+		        ParodusInfo("Successfully sent event to hub\n");
+                        if( num_fail > 0 ) 
+                        {
+                            num_fail = 0;
+                        }
+	            }
+		    else
+		    {
+		        ParodusError("Failed to send event to hub\n");
+                        num_fail++;
+                        if( 10 == num_fail )
+                        {
+                            cleanup_sock(&p_sock->pipeline.sock);
+                            while( status == false )
+                            {
+                                status = spoke_setup_pipeline(p_sock->pipeline.url, &p_sock->pipeline.sock);
+                                if( status == false )
+                                {
+                                    if( c <= max )
+                                    {
+                                        retry_time = (int) pow(2, c++) - 1;
+                                    }
+                                    ParodusError("Failed to spoke setup pipeline, retrying in %u seconds\n", retry_time);
+                                    sleep(retry_time);
+                                }
+                            }
+                            num_fail = 0;
+                            retry_time = 0;
+                            c = 2;
+                        }
+                     }
+	    }
             free(message);
             message = NULL;
         }
