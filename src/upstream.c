@@ -119,7 +119,7 @@ void handle_upstream(void *args)
     if(args != NULL)
     {
         p_sock = (socket_handles_t *) args;
-        bytes = check_inbox (p_sock->local, &buf);
+        bytes = check_inbox (p_sock->parodus.sock, &buf);
 
         if(bytes>0 && buf != NULL)
         {

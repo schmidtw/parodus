@@ -24,11 +24,17 @@ typedef struct P2P_Msg__
 	struct P2P_Msg__ *next;
 } P2P_Msg;
 
+typedef struct _url_sock_t
+{
+        char *url;
+        int sock;
+} url_sock_t;
+
 typedef struct _socket_handles
 {
-        int pipeline;
-        int pubsub;
-        int local;
+        url_sock_t pipeline;
+        url_sock_t pubsub;
+        url_sock_t parodus;
 } socket_handles_t;
 
 /*----------------------------------------------------------------------------*/

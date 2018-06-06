@@ -28,8 +28,7 @@
 /*----------------------------------------------------------------------------*/
 /*                                   Macros                                   */
 /*----------------------------------------------------------------------------*/
-#define HUB   "tcp://127.0.0.1:7777"
-#define SPOKE "tcp://127.0.0.1:8888"
+#define PUBSUB   "tcp://127.0.0.1:7777"
 
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
@@ -50,12 +49,7 @@ static void *send_hub();
 /*----------------------------------------------------------------------------*/
 static test_t tests[] = {
     {   // 0 
-        .d = HUB,
-        .n = "Some binary",
-        .nsz = 11,
-    },
-    {   // 1 
-        .d = SPOKE,
+        .d = PUBSUB,
         .n = "Some other binary",
         .nsz = 17,
     },
@@ -72,25 +66,24 @@ static test_t tests[] = {
 void test_pub_sub()
 {
     pthread_t t;
-    int pipeline_sock, pubsub_sock;
+    int pubsub_sock;
     char *msg = NULL;
     ssize_t msg_sz = 0;
 
     pthread_create(&t, NULL, send_hub, NULL);
 
-    spoke_setup( SPOKE, HUB, NULL, &pipeline_sock, &pubsub_sock );
+    spoke_setup_pubsub( PUBSUB, &pubsub_sock );
     for( ;; ) {
         msg_sz = check_inbox(pubsub_sock, (void **) &msg);
         if( 0 < msg_sz ) {
             printf("check spoke - msg_sz = %zd\n", msg_sz);
-            CU_ASSERT_EQUAL( (tests[1].nsz), msg_sz );
-            CU_ASSERT_STRING_EQUAL( tests[1].n, msg );
+            CU_ASSERT_EQUAL( (tests[0].nsz), msg_sz );
+            CU_ASSERT_STRING_EQUAL( tests[0].n, msg );
             free_msg(msg);
             break;
         }
     }
-    sock_cleanup(pipeline_sock);
-    sock_cleanup(pubsub_sock);
+    cleanup_sock(&pubsub_sock);
 }
 
 /*----------------------------------------------------------------------------*/
@@ -127,20 +120,19 @@ int main(void)
 /*----------------------------------------------------------------------------*/
 static void *send_hub()
 {
-    int pipeline_sock, pubsub_sock;
+    int pubsub_sock;
     bool result;
 
-    hub_setup( SPOKE, HUB, &pipeline_sock, &pubsub_sock );
+    hub_setup_pubsub( PUBSUB, &pubsub_sock );
     sleep(5);
     for( ;; ) {
-        result = send_msg(pubsub_sock, tests[1].n, tests[1].nsz);
+        result = send_msg(pubsub_sock, tests[0].n, tests[0].nsz);
         if( 0 < result ) {
             printf("send hub - result = %d\n", result);
             CU_ASSERT(true == result);
             break;
         }
     }
-    sock_cleanup(pipeline_sock);
-    sock_cleanup(pubsub_sock);
+    cleanup_sock(&pubsub_sock);
     return NULL;
 }

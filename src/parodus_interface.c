@@ -47,116 +47,144 @@
 /*----------------------------------------------------------------------------*/
 /*                             External functions                             */
 /*----------------------------------------------------------------------------*/
-bool spoke_setup(const char *pipeline_url, const char *pubsub_url, const char **topics, int *pipeline_sock, int *pubsub_sock)
+bool spoke_setup_pubsub(const char *url, int *sock)
 {
-    int sock;
+    int s;
     int rv;
-    int t = 2000;
 
-    sock = nn_socket(AF_SP, NN_SUB);
-    if( sock < 0 ) {
-        ParodusError("NN spoke sub socket error %d, %d(%s)\n", sock, errno, strerror(errno));
+    s = nn_socket(AF_SP, NN_SUB);
+    if( 0 > s ) {
+        ParodusError("NN spoke sub socket error %d, %d(%s)\n", s, errno, strerror(errno));
         return false;
     }
 
     /* Subscribe to everything ("" means all topics) */
-    rv = nn_setsockopt(sock, NN_SUB, NN_SUB_SUBSCRIBE, "", 0); (void) topics; // ignoring topics for now
+    rv = nn_setsockopt(s, NN_SUB, NN_SUB_SUBSCRIBE, "", 0); 
     if( 0 > rv ) {
-        ParodusError("NN spoke sub socket topics setting error %d, %d(%s)\n", sock, errno, strerror(errno));
-        nn_close(sock);
+        ParodusError("NN spoke sub socket topics setting error %d, %d(%s)\n", s, errno, strerror(errno));
+        nn_close(s);
         return false;
     }
 
-    rv = nn_connect(sock, pubsub_url);
-    if( rv < 0 ) {
-        ParodusError("NN spoke sub socket %d bind error %d, %d(%s)\n", sock, rv, errno, strerror(errno));
+    rv = nn_connect(s, url);
+    if( 0 > rv ) {
+        ParodusError("NN spoke sub socket %d bind error %d, %d(%s)\n", s, rv, errno, strerror(errno));
         goto finished;
     }
 
-    *pubsub_sock = sock;
+    *sock = s;
+    return true;
 
-    sock = nn_socket(AF_SP, NN_PUSH);
-    if( sock < 0 ) {
-        ParodusError("NN spoke push socket error %d, %d(%s)\n", sock, errno, strerror(errno));
+finished:
+    nn_shutdown(s, rv);
+    nn_close(s);
+
+    return false;
+}
+
+bool spoke_setup_pipeline(const char *url, int *sock)
+{
+    int s;
+    int rv;
+    int t = 2000;
+
+    s = nn_socket(AF_SP, NN_PUSH);
+    if( 0 > s ) {
+        ParodusError("NN spoke push socket error %d, %d(%s)\n", s, errno, strerror(errno));
         return false;
     }
 
-    rv = nn_setsockopt(sock, NN_SOL_SOCKET, NN_SNDTIMEO, &t, sizeof(t));
-    if( rv < 0 ) {
+    rv = nn_setsockopt(s, NN_SOL_SOCKET, NN_SNDTIMEO, &t, sizeof(t));
+    if( 0 > rv ) {
         ParodusError("NN spoke push socket timeout setting error %d, %d(%s)\n", rv, errno, strerror(errno));
-        nn_close(sock);
+        nn_close(s);
         return false;
     }
 
-    rv = nn_connect(sock, pipeline_url);
-    if( rv < 0 ) {
+    rv = nn_connect(s, url);
+    if( 0 > rv ) {
         ParodusError("NN spoke push socket connect error %d, %d(%s)\n", rv, errno, strerror(errno));
         goto finished;
     }
 
-    *pipeline_sock = sock;
+    *sock = s;
     return true;
 
 finished:
-    nn_shutdown(sock, rv);
-    nn_close(sock);
+    nn_shutdown(s, rv);
+    nn_close(s);
 
     return false;
 }
 
-bool hub_setup(const char *pipeline_url, const char *pubsub_url, int *pipeline_sock, int *pubsub_sock)
+bool hub_setup_pipeline(const char *url, int *sock)
 {
-    int sock;
+    int s;
+    int rv;
+
+    s = nn_socket(AF_SP, NN_PULL);
+    if( 0 > s ) {
+        ParodusError("NN hub pull socket error %d, %d(%s)\n", s, errno, strerror(errno));
+        return false;
+    }
+
+    rv = nn_bind(s, url);
+    if( 0 > rv ) {
+        ParodusError("NN hub pull socket %d bind error %d, %d(%s)\n", s, rv, errno, strerror(errno));
+        goto finished;
+    }
+
+    *sock = s;
+    return true;
+
+finished:
+    nn_shutdown(s, rv);
+    nn_close(s);
+
+    return false;
+}
+
+bool hub_setup_pubsub(const char *url, int *sock)
+{
+    int s;
     int rv;
     int t = 2000;
 
-    sock = nn_socket(AF_SP, NN_PULL);
-    if( sock < 0 ) {
-        ParodusError("NN hub pull socket error %d, %d(%s)\n", sock, errno, strerror(errno));
+    s = nn_socket(AF_SP, NN_PUB);
+    if( 0 > s ) {
+        ParodusError("NN hub pub socket error %d, %d(%s)\n", s, errno, strerror(errno));
         return false;
     }
 
-    rv = nn_bind(sock, pipeline_url);
-    if( rv < 0 ) {
-        ParodusError("NN hub pull socket %d bind error %d, %d(%s)\n", sock, rv, errno, strerror(errno));
-        nn_close(sock);
-        return false;
-    }
-
-    *pipeline_sock = sock;
-
-    sock = nn_socket(AF_SP, NN_PUB);
-    if( sock < 0 ) {
-        ParodusError("NN hub pub socket error %d, %d(%s)\n", sock, errno, strerror(errno));
-        return false;
-    }
-
-    rv = nn_setsockopt(sock, NN_SOL_SOCKET, NN_SNDTIMEO, &t, sizeof(t));
-    if( rv < 0 ) {
+    rv = nn_setsockopt(s, NN_SOL_SOCKET, NN_SNDTIMEO, &t, sizeof(t));
+    if( 0 > rv ) {
         ParodusError("NN hub pub socket timeout setting error %d, %d(%s)\n", rv, errno, strerror(errno));
-        nn_close(sock);
+        nn_close(s);
     }
 
-    rv = nn_bind(sock, pubsub_url);
-    if( rv < 0 ) {
+    rv = nn_bind(s, url);
+    if( 0 > rv ) {
         ParodusError("NN parodus send connect error %d, %d(%s)\n", rv, errno, strerror(errno));
         goto finished;
     }
 
-    *pubsub_sock = sock;
+    *sock = s;
     return true;
 
 finished:
-    nn_shutdown(sock, rv);
-    nn_close(sock);
+    nn_shutdown(s, rv);
+    nn_close(s);
 
     return false;
 }
 
-void sock_cleanup(int sock)
+void cleanup_sock(int *sock)
 {
-    nn_shutdown(sock, 0);
-    nn_close(sock);
+    if( 0 <= *sock ) {
+        nn_shutdown(*sock, 0);
+        nn_close(*sock);
+        *sock = -1;
+    }
 }
 
 bool send_msg(int sock, const void *notification, size_t notification_size)
@@ -164,7 +192,6 @@ bool send_msg(int sock, const void *notification, size_t notification_size)
     int bytes_sent = 0;
     
     bytes_sent = nn_send(sock, notification, notification_size, NN_DONTWAIT);
-    sleep(5);
     if( bytes_sent < 0 ) {
         ParodusError("Send msg - bytes_sent = %d, %d(%s)\n", bytes_sent, errno, strerror(errno));
     }

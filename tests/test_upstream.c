@@ -200,6 +200,19 @@ void messageHandlerTask()
 void CRUDHandlerTask()
 {
 }
+
+void cleanup_sock(int *sock)
+{
+    UNUSED(sock);
+    function_called();
+}
+
+bool spoke_setup_pipeline(const char *pipeline_url, int *pipeline_sock)
+{
+    UNUSED(pipeline_url); UNUSED(pipeline_sock);
+    function_called();
+    return (bool)mock();
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
@@ -229,9 +242,9 @@ void test_handle_upstream()
 {
     numLoops = 1;
     socket_handles_t sock;
-    sock.pipeline = 1;
-    sock.pubsub = 0;
-    sock.local = 2;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
+    sock.parodus.sock = 2;
     UpStreamMsgQ = (UpStreamMsg *) malloc(sizeof(UpStreamMsg));
     UpStreamMsgQ->msg = "First Message";
     UpStreamMsgQ->len = 13;
@@ -250,9 +263,9 @@ void test_handle_upstream()
 void err_handleUpstream()
 {
     socket_handles_t sock;
-    sock.pipeline = 1;
-    sock.pubsub = 0;
-    sock.local = 2;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
+    sock.parodus.sock = 2;
     notification = NULL;
     expect_function_call(check_inbox);
     will_return(check_inbox, -1);

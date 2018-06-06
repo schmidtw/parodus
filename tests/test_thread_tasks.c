@@ -121,9 +121,9 @@ void err_messageHandlerTask()
 void test_handle_and_process_message()
 {
     socket_handles_t sock;
-    sock.pipeline = 1;
-    sock.pubsub = 0;
-    sock.local = 2;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
+    sock.parodus.sock = 2;
     numLoops = 1;
 
     expect_function_call(CRUDHandlerTask);
