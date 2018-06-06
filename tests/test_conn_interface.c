@@ -72,20 +72,6 @@ void packMetaData()
     function_called();
 }
 
-void handle_upstream(void *args)
-{
-    UNUSED(args);
-}
-
-void processUpstreamMessage()
-{
-}
-
-void *serviceAliveTask()
-{
-    return NULL;
-}
-
 int nopoll_loop_wait(noPollCtx * ctx,long timeout)
 {
     UNUSED(ctx); UNUSED(timeout);
@@ -205,7 +191,6 @@ void test_createSocketConnection()
     expect_function_call(createNopollConnection);
     expect_function_call(packMetaData);
 
-    expect_function_calls(StartThread, 1);
     expect_function_call(initKeypress);
     expect_function_calls(StartThread, 1);
     will_return(nopoll_loop_wait, 1);
@@ -244,7 +229,7 @@ void test_createSocketConnection1()
     expect_function_call(createNopollConnection);
     expect_function_call(packMetaData);
 
-    expect_function_calls(StartThread, 2);
+    expect_function_calls(StartThread, 1);
     will_return(nopoll_loop_wait, 1);
     expect_function_call(nopoll_loop_wait);
     
@@ -294,7 +279,7 @@ void test_createSocketConnection2()
     expect_function_call(createNopollConnection);
     expect_function_call(packMetaData);
 
-    expect_function_calls(StartThread, 2);
+    expect_function_calls(StartThread, 1);
     will_return(nopoll_loop_wait, 1);
     will_return(nopoll_loop_wait, 1);
     will_return(nopoll_loop_wait, 1);
@@ -335,7 +320,7 @@ void err_createSocketConnection()
     expect_function_call(createNopollConnection);
     expect_function_call(packMetaData);
 
-    expect_function_calls(StartThread, 2);
+    expect_function_calls(StartThread, 1);
     will_return(nopoll_loop_wait, 1);
     expect_function_call(nopoll_loop_wait);
     

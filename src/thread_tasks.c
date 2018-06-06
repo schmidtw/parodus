@@ -21,6 +21,7 @@
 #include "peer2peer.h"
 #include "upstream.h"
 #include "time.h"
+#include "service_alive.h"
 
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
@@ -61,6 +62,7 @@ void *handle_and_process_message(void *args)
     while( FOREVER() )
     {
         startTime = getCurrentTimeInMicroSeconds(&start);
+        serviceAliveTask();
         messageHandlerTask();
         CRUDHandlerTask();
         handle_upstream(args);
@@ -73,8 +75,8 @@ void *handle_and_process_message(void *args)
         ParodusPrint("Elapsed time : %lu \n", diffTime);
         if(diffTime < 500000)
         {
-            ParodusPrint("Sleeping for 1 s\n");
-            sleep(1);
+            ParodusPrint("Sleeping for 0.5 s\n");
+            usleep(500000);
         }
     }
     return NULL;

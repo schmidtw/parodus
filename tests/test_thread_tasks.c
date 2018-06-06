@@ -91,6 +91,11 @@ void process_P2P_OutgoingMessage(void *args)
     UNUSED(args);
     function_called();
 }
+
+void serviceAliveTask()
+{
+    function_called();
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
@@ -126,6 +131,7 @@ void test_handle_and_process_message()
     sock.parodus.sock = 2;
     numLoops = 1;
 
+    expect_function_call(serviceAliveTask);
     expect_function_call(CRUDHandlerTask);
     expect_function_call(handle_upstream);
     expect_function_call(processUpstreamMessage);

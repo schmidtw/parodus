@@ -433,7 +433,7 @@ void sendToAllRegisteredClients(void **resp_bytes, size_t resp_size)
     rv = wrp_to_struct( *resp_bytes, resp_size, WRP_BYTES, &msg );
     if(rv > 0)
     {
-        ParodusInfo("B4 filter_clients_and_send()\n");
+        ParodusPrint("B4 filter_clients_and_send()\n");
         filter_clients_and_send(msg);
         wrp_free_struct(msg);
         msg = NULL;

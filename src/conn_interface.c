@@ -31,9 +31,7 @@
 #include "nopoll_helpers.h"
 #include "mutex.h"
 #include "spin_thread.h"
-#include "service_alive.h"
 #include "seshat_interface.h"
-#include "crud_interface.h"
 #ifdef FEATURE_DNS_QUERY
 #include <ucresolv_log.h>
 #endif
@@ -93,12 +91,7 @@ void createSocketConnection(void (* initKeypress)())
     packMetaData();
     
     UpStreamMsgQ = NULL;
-    //StartThread(handle_upstream, NULL);
-    //StartThread(processUpstreamMessage, NULL);
     ParodusMsgQ = NULL;
-    //StartThread(messageHandlerTask, NULL);
-    StartThread(serviceAliveTask, NULL);
-    //StartThread(CRUDHandlerTask, NULL);
 
     if (NULL != initKeypress) 
     {
