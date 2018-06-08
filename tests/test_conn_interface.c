@@ -72,28 +72,6 @@ void packMetaData()
     function_called();
 }
 
-
-
-void *handle_upstream()
-{
-    return NULL;
-}
-
-void *processUpstreamMessage()
-{
-    return NULL;
-}
-
-void *messageHandlerTask()
-{
-    return NULL;
-}
-
-void *serviceAliveTask()
-{
-    return NULL;
-}
-
 int nopoll_loop_wait(noPollCtx * ctx,long timeout)
 {
     UNUSED(ctx); UNUSED(timeout);
@@ -185,6 +163,12 @@ bool delete_client_subscriptions(char *service_name)
     UNUSED(service_name);
     return true;
 }
+
+void *handle_and_process_message(void *args)
+{
+    UNUSED(args);
+    return NULL;
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
@@ -207,9 +191,8 @@ void test_createSocketConnection()
     expect_function_call(createNopollConnection);
     expect_function_call(packMetaData);
 
-    expect_function_calls(StartThread, 5);
     expect_function_call(initKeypress);
-    expect_function_calls(StartThread, 3);
+    expect_function_calls(StartThread, 1);
     will_return(nopoll_loop_wait, 1);
     expect_function_call(nopoll_loop_wait);
     
@@ -246,7 +229,7 @@ void test_createSocketConnection1()
     expect_function_call(createNopollConnection);
     expect_function_call(packMetaData);
 
-    expect_function_calls(StartThread, 8);
+    expect_function_calls(StartThread, 1);
     will_return(nopoll_loop_wait, 1);
     expect_function_call(nopoll_loop_wait);
     
@@ -296,7 +279,7 @@ void test_createSocketConnection2()
     expect_function_call(createNopollConnection);
     expect_function_call(packMetaData);
 
-    expect_function_calls(StartThread, 8);
+    expect_function_calls(StartThread, 1);
     will_return(nopoll_loop_wait, 1);
     will_return(nopoll_loop_wait, 1);
     will_return(nopoll_loop_wait, 1);
@@ -337,7 +320,7 @@ void err_createSocketConnection()
     expect_function_call(createNopollConnection);
     expect_function_call(packMetaData);
 
-    expect_function_calls(StartThread, 8);
+    expect_function_calls(StartThread, 1);
     will_return(nopoll_loop_wait, 1);
     expect_function_call(nopoll_loop_wait);
     

@@ -224,6 +224,27 @@ void free_msg(void *msg)
     nn_freemsg(msg);
 }
 
+bool parodus_setup(const char *parodus_local_url, int *parodus_sock)
+{
+    int sock;
+    int rv;
+
+    sock = nn_socket( AF_SP, NN_PULL );
+    if( sock < 0 ) {
+        ParodusError("NN parodus pull socket error %d, %d(%s)\n", sock, errno, strerror(errno));
+        return false;
+    }
+
+    rv = nn_bind(sock, parodus_local_url);
+    if( rv < 0 ) {
+        ParodusError("NN parodus pull socket %d bind error %d, %d(%s)\n", sock, rv, errno, strerror(errno));
+        nn_close(sock);
+        return false;
+    }
+
+    *parodus_sock = sock;
+    return true;
+}
 /*----------------------------------------------------------------------------*/
 /*                             Internal functions                             */
 /*----------------------------------------------------------------------------*/

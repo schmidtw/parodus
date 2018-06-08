@@ -25,6 +25,7 @@
 #include "../src/ParodusInternal.h"
 #include "../src/thread_tasks.h"
 #include "../src/client_list.h"
+#include "../src/peer2peer.h"
 
 
 /*----------------------------------------------------------------------------*/
@@ -57,11 +58,43 @@ void listenerOnMessage(void * msg, size_t msgSize )
     function_called();
 }
 
-int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex)
+void handle_upstream(void *args)
 {
-    UNUSED(cond); UNUSED(mutex);
     function_called();
-    return (int)mock();
+    UNUSED(args);
+}
+
+void processUpstreamMessage()
+{
+    function_called();
+}
+
+void CRUDHandlerTask()
+{
+    function_called();
+}
+
+void handle_P2P_Incoming(void *args)
+{
+    function_called();
+    UNUSED(args);
+}
+
+void process_P2P_IncomingMessage(void *args)
+{
+    UNUSED(args);
+    function_called();
+}
+
+void process_P2P_OutgoingMessage(void *args)
+{
+    UNUSED(args);
+    function_called();
+}
+
+void serviceAliveTask()
+{
+    function_called();
 }
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
@@ -86,11 +119,34 @@ void test_messageHandlerTask()
 void err_messageHandlerTask()
 {
     numLoops = 1;
-    will_return(pthread_cond_wait, 0);
-    expect_function_call(pthread_cond_wait);
     
     messageHandlerTask();
 }
+
+void test_handle_and_process_message()
+{
+    socket_handles_t sock;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
+    sock.parodus.sock = 2;
+    numLoops = 1;
+
+    expect_function_call(serviceAliveTask);
+    expect_function_call(CRUDHandlerTask);
+    expect_function_call(handle_upstream);
+    expect_function_call(processUpstreamMessage);
+    expect_function_call(process_P2P_OutgoingMessage);
+    expect_function_call(handle_P2P_Incoming);
+    expect_function_call(process_P2P_IncomingMessage);
+    handle_and_process_message((void *)&sock);
+}
+
+void test_handle_and_process_message_null()
+{
+    numLoops = 0;
+    handle_and_process_message(NULL);
+}
+
 /*----------------------------------------------------------------------------*/
 /*                             External Functions                             */
 /*----------------------------------------------------------------------------*/
@@ -100,6 +156,8 @@ int main(void)
     const struct CMUnitTest tests[] = {
         cmocka_unit_test(test_messageHandlerTask),
         cmocka_unit_test(err_messageHandlerTask),
+        cmocka_unit_test(test_handle_and_process_message),
+        cmocka_unit_test(test_handle_and_process_message_null),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

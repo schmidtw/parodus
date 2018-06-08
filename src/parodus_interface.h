@@ -113,6 +113,7 @@ ssize_t check_inbox(int sock, void **msg);
  */
 void free_msg(void *msg);
 
+bool parodus_setup(const char *parodus_local_url, int *parodus_sock);
 #ifdef __cplusplus
 }
 #endif

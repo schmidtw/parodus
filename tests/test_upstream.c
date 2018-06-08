@@ -31,6 +31,7 @@
 #include "../src/client_list.h"
 #include "../src/ParodusInternal.h"
 #include "../src/partners_check.h"
+#include "../src/peer2peer.h"
 
 /*----------------------------------------------------------------------------*/
 /*                            File Scoped Variables                           */
@@ -42,6 +43,7 @@ extern size_t metaPackSize;
 extern UpStreamMsg *UpStreamMsgQ;
 int numLoops = 1;
 wrp_msg_t *temp = NULL;
+char *notification;
 /*----------------------------------------------------------------------------*/
 /*                                   Mocks                                    */
 /*----------------------------------------------------------------------------*/
@@ -122,26 +124,6 @@ int nn_socket (int domain, int protocol)
     function_called();
     return (int)mock();
 }
-int nn_bind (int s, const char *addr)
-{
-    (void) s; (void) addr;
-    function_called();
-    return (int)mock();
-}
-
-int nn_recv (int s, void *buf, size_t len, int flags)
-{
-    (void) s; (void) len; (void) flags; (void) buf;
-    function_called();
-    return (int)mock();
-}
-
-int pthread_cond_wait(pthread_cond_t *restrict cond, pthread_mutex_t *restrict mutex)
-{
-    UNUSED(cond); UNUSED(mutex);
-    function_called();
-    return (int)mock();
-}
 
 ssize_t wrp_to_struct( const void *bytes, const size_t length, const enum wrp_format fmt, wrp_msg_t **msg )
 {
@@ -155,13 +137,6 @@ void wrp_free_struct( wrp_msg_t *msg )
 {
     UNUSED(msg);
     function_called();
-}
-
-int nn_freemsg (void *msg)
-{
-    UNUSED(msg);
-    function_called();
-    return (int)mock();
 }
 
 int nn_shutdown (int s, int how)
@@ -197,6 +172,47 @@ void filter_clients_and_send(wrp_msg_t *wrp_event_msg)
     UNUSED(wrp_event_msg);
     function_called();
 }
+
+ssize_t check_inbox(int sock, void **msg)
+{
+    UNUSED(sock);
+    *msg = notification;
+    function_called();
+    return (ssize_t)mock();
+}
+
+void free_msg(void *msg)
+{
+    UNUSED(msg);
+    function_called();
+}
+
+bool send_msg(int sock, const void *msg, size_t size)
+{
+    UNUSED(sock); UNUSED(msg); UNUSED(size);
+    function_called();
+    return (bool)mock();
+}
+void messageHandlerTask()
+{
+}
+
+void CRUDHandlerTask()
+{
+}
+
+void cleanup_sock(int *sock)
+{
+    UNUSED(sock);
+    function_called();
+}
+
+bool spoke_setup_pipeline(const char *pipeline_url, int *pipeline_sock)
+{
+    UNUSED(pipeline_url); UNUSED(pipeline_sock);
+    function_called();
+    return (bool)mock();
+}
 /*----------------------------------------------------------------------------*/
 /*                                   Tests                                    */
 /*----------------------------------------------------------------------------*/
@@ -219,19 +235,16 @@ void err_packMetaData()
 void test_handleUpstreamNull()
 {
     numLoops = 1;
-    UpStreamMsgQ = NULL;
-    will_return(nn_socket, 1);
-    expect_function_call(nn_socket);
-    will_return(nn_bind, 1);
-    expect_function_call(nn_bind);
-    will_return(nn_recv, 12);
-    expect_function_call(nn_recv);
-    handle_upstream();
+    handle_upstream(NULL);
 }
 
 void test_handle_upstream()
 {
     numLoops = 1;
+    socket_handles_t sock;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
+    sock.parodus.sock = 2;
     UpStreamMsgQ = (UpStreamMsg *) malloc(sizeof(UpStreamMsg));
     UpStreamMsgQ->msg = "First Message";
     UpStreamMsgQ->len = 13;
@@ -239,31 +252,24 @@ void test_handle_upstream()
     UpStreamMsgQ->next->msg = "Second Message";
     UpStreamMsgQ->next->len = 15;
     UpStreamMsgQ->next->next = NULL;
-    will_return(nn_socket, 1);
-    expect_function_call(nn_socket);
-    will_return(nn_bind, 1);
-    expect_function_call(nn_bind);
-    will_return(nn_recv, 12);
-    expect_function_call(nn_recv);
-    handle_upstream();
+    notification = "Hello";
+    expect_function_call(check_inbox);
+    will_return(check_inbox, 6);
+    handle_upstream((void *)&sock);
     free(UpStreamMsgQ->next);
     free(UpStreamMsgQ);
 }
 
-void err_handleUpstreamBindFailure()
+void err_handleUpstream()
 {
-    will_return(nn_socket, 1);
-    expect_function_call(nn_socket);
-    will_return(nn_bind, -1);
-    expect_function_call(nn_bind);
-    handle_upstream();
-}
-
-void err_handleUpstreamSockFailure()
-{
-    will_return(nn_socket, -1);
-    expect_function_call(nn_socket);
-    handle_upstream();
+    socket_handles_t sock;
+    sock.pipeline.sock = 1;
+    sock.pubsub.sock = 0;
+    sock.parodus.sock = 2;
+    notification = NULL;
+    expect_function_call(check_inbox);
+    will_return(check_inbox, -1);
+    handle_upstream((void *)&sock);
 }
 
 void test_processUpstreamMessage()
@@ -447,8 +453,6 @@ void err_processUpstreamMessage()
 {
     numLoops = 1;
     UpStreamMsgQ = NULL;
-    will_return(pthread_cond_wait, 0);
-    expect_function_call(pthread_cond_wait);
     processUpstreamMessage();
 }
 
@@ -593,8 +597,7 @@ int main(void)
         cmocka_unit_test(err_packMetaData),
         cmocka_unit_test(test_handleUpstreamNull),
         cmocka_unit_test(test_handle_upstream),
-        cmocka_unit_test(err_handleUpstreamBindFailure),
-        cmocka_unit_test(err_handleUpstreamSockFailure),
+        cmocka_unit_test(err_handleUpstream),
         cmocka_unit_test(test_processUpstreamMessage),
         cmocka_unit_test(test_processUpstreamMessageInvalidPartner),
         cmocka_unit_test(test_processUpstreamMessageRegMsg),

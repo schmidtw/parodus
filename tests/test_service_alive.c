@@ -44,9 +44,8 @@ void addCRUDmsgToQueue(wrp_msg_t *crudMsg)
 	return;
 }
 
-void *CRUDHandlerTask()
+void CRUDHandlerTask()
 {
-	return NULL;
 }
 static void add_client()
 {

@@ -34,21 +34,18 @@ typedef struct _socket_handles
 {
         url_sock_t pipeline;
         url_sock_t pubsub;
+        url_sock_t parodus;
 } socket_handles_t;
 
 /*----------------------------------------------------------------------------*/
 /*                             Function Prototypes                            */
 /*----------------------------------------------------------------------------*/
 
-// Producer thread to pull and add P2P Incoming queue items 
-// from the peer 2 peer pipe
-void *handle_P2P_Incoming();
+void handle_P2P_Incoming(void *args);
 
-// Consumer thread to process the P2P Incoming queue items 
-void *process_P2P_IncomingMessage();
+void process_P2P_IncomingMessage(void *args);
 
-// Consumer thread to process the P2P Outgoing queue items 
-void *process_P2P_OutgoingMessage();
+void process_P2P_OutgoingMessage(void *args);
 
 // Add outgoing messages to the P2P Outgoing queue
 void add_P2P_OutgoingMessage(void **message, size_t len);

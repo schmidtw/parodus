@@ -32,7 +32,7 @@
 extern "C" {
 #endif
   
-void *serviceAliveTask();
+void serviceAliveTask();
 
 
 #ifdef __cplusplus

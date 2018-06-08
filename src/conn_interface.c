@@ -31,9 +31,7 @@
 #include "nopoll_helpers.h"
 #include "mutex.h"
 #include "spin_thread.h"
-#include "service_alive.h"
 #include "seshat_interface.h"
-#include "crud_interface.h"
 #ifdef FEATURE_DNS_QUERY
 #include <ucresolv_log.h>
 #endif
@@ -93,12 +91,7 @@ void createSocketConnection(void (* initKeypress)())
     packMetaData();
     
     UpStreamMsgQ = NULL;
-    StartThread(handle_upstream, NULL);
-    StartThread(processUpstreamMessage, NULL);
     ParodusMsgQ = NULL;
-    StartThread(messageHandlerTask, NULL);
-    StartThread(serviceAliveTask, NULL);
-    StartThread(CRUDHandlerTask, NULL);
 
     if (NULL != initKeypress) 
     {
@@ -110,13 +103,16 @@ void createSocketConnection(void (* initKeypress)())
 
     sock.pipeline.url = PIPELINE_URL;
     sock.pubsub.url = PUBSUB_URL;
+    sock.parodus.url = PARODUS_UPSTREAM;
     if(NULL != get_parodus_cfg()->pipeline_url) {
 	sock.pipeline.url = get_parodus_cfg()->pipeline_url;
     }
     if(NULL != get_parodus_cfg()->pubsub_url) {
 	sock.pubsub.url = get_parodus_cfg()->pubsub_url;
     }
-    
+    if(NULL != get_parodus_cfg()->local_url) {
+	    sock.parodus.url = get_parodus_cfg()->local_url;
+    }
     if( 0 == strncmp(HUB_STR, get_parodus_cfg()->hub_or_spk, sizeof(HUB_STR)) ) {
         hub_setup_pipeline(sock.pipeline.url, &sock.pipeline.sock);
         hub_setup_pubsub(sock.pubsub.url, &sock.pubsub.sock);
@@ -124,10 +120,10 @@ void createSocketConnection(void (* initKeypress)())
         spoke_setup_pipeline(sock.pipeline.url, &sock.pipeline.sock);
         spoke_setup_pubsub(sock.pubsub.url, &sock.pubsub.sock);
     }
-    StartThread(handle_P2P_Incoming, &sock);
-    StartThread(process_P2P_IncomingMessage, &sock);
-    StartThread(process_P2P_OutgoingMessage, &sock);
-    
+    parodus_setup(sock.parodus.url, &sock.parodus.sock);
+
+    StartThread(handle_and_process_message, &sock);
+
     do
     {
         nopoll_loop_wait(ctx, 5000000);

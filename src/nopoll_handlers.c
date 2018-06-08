@@ -100,7 +100,6 @@ void listenerOnMessage_queue(noPollCtx * ctx, noPollConn * conn, noPollMsg * msg
         {
             ParodusMsgQ = message;
             ParodusPrint("Producer added message\n");
-            pthread_cond_signal(&g_cond);
             pthread_mutex_unlock (&g_mutex);
             ParodusPrint("mutex unlock in producer thread\n");
         }
