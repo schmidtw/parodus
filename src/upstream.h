@@ -24,6 +24,8 @@
 #ifndef _UPSTREAM_H_
 #define _UPSTREAM_H_
 
+#include <pthread.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
