@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Start the first process
-parodus $@ &
+parodus $@ >> parodus.txt 2>&1 &
 status=$?
 if [ $status -ne 0 ]; then
   echo "Failed to start my_first_process: $status"
@@ -10,7 +10,7 @@ fi
 
 sleep 10
 # Start the second process
-./tests/printer -p tcp://127.0.0.1:6666 -c tcp://127.0.0.1:9001 -t 10000 -n printer1 -m 4bb161000b60 &
+./tests/printer -p tcp://127.0.0.1:6666 -c tcp://127.0.0.1:9001 -t 10000 -n printer1 -m 4bb161000b60 >> printer.txt 2>&1 &
 status=$?
 if [ $status -ne 0 ]; then
   echo "Failed to start my_second_process: $status"
@@ -23,15 +23,6 @@ fi
 # if it detects that either of the processes has exited.
 # Otherwise it loops forever, waking up every 60 seconds
 
-while sleep 60; do
-  ps aux |grep parodus |grep -q -v grep
-  PROCESS_1_STATUS=$?
-  ps aux |grep printer |grep -q -v grep
-  PROCESS_2_STATUS=$?
-  # If the greps above find anything, they exit with 0 status
-  # If they are not both 0, then something is wrong
-  if [ $PROCESS_1_STATUS -ne 0 -o $PROCESS_2_STATUS -ne 0 ]; then
-    echo "One of the processes has already exited."
-    exit 1
-  fi
-done
+sleep 1
+
+tail -f parodus.txt
