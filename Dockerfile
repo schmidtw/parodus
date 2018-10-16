@@ -31,4 +31,6 @@ ln -s /usr/lib/libnanomsg.so /usr/lib/libnanomsg.so.5 && \
 ln -s /usr/lib/libnanomsg.so /usr/lib/libnanomsg.so.5.1.0 && \
 ln -s /usr/lib/libcjson.so /usr/lib/libcjson.so.1
 
-ENTRYPOINT ["parodus"]
+COPY hub.sh /
+
+ENTRYPOINT ["sh","/hub.sh"]
