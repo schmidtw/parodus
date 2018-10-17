@@ -1,0 +1,12 @@
+FROM alpine:latest as builder
+MAINTAINER Jack Murdock <jack_murdock@comcast.com>
+
+# build the binary
+WORKDIR /parodus
+RUN apk add --update --repository https://dl-3.alpinelinux.org/alpine/edge/testing/ \
+cmake autoconf make musl-dev gcc g++ openssl openssl-dev git cunit cunit-dev automake libtool util-linux-dev
+
+COPY . /parodus/
+
+RUN mkdir build
+RUN cd build && cmake .. && make && make install

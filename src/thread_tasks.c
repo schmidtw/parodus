@@ -73,10 +73,10 @@ void *handle_and_process_message(void *args)
         endTime = getCurrentTimeInMicroSeconds(&end);
         diffTime = endTime - startTime;
         ParodusPrint("Elapsed time : %lu \n", diffTime);
-        if(diffTime < 500000)
+        if(diffTime < 50)
         {
             ParodusPrint("Sleeping for 0.5 s\n");
-            usleep(500000);
+            usleep(1);
         }
     }
     return NULL;

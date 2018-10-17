@@ -1,0 +1,22 @@
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates openssl
+
+RUN mkdir /tests/
+
+COPY --from=parodus:compile /usr/local/bin/parodus /usr/local/bin/parodus
+COPY --from=parodus:compile /parodus/build/src/parodus /usr/bin/
+COPY --from=parodus:compile /parodus/build/_install/lib/*.so /usr/lib/
+COPY --from=parodus:compile /parodus/build/_install/lib64/*.so /usr/lib/
+COPY --from=parodus:compile /parodus/build/tests/* /tests/
+
+RUN ln -s /usr/lib/libmsgpackc.so /usr/lib/libmsgpackc.so.2 && \
+ln -s /usr/lib/libtrower-base64.so /usr/lib/libtrower-base64.so.1.0.0 && \
+ln -s /usr/lib/libnopoll.so /usr/lib/libnopoll.so.0 && \
+ln -s /usr/lib/libcimplog.so /usr/lib/libcimplog.so.1.0.0 && \
+ln -s /usr/lib/libnanomsg.so /usr/lib/libnanomsg.so.5 && \
+ln -s /usr/lib/libnanomsg.so /usr/lib/libnanomsg.so.5.1.0 && \
+ln -s /usr/lib/libcjson.so /usr/lib/libcjson.so.1
+
+COPY hub.sh /
+
+ENTRYPOINT ["sh","/hub.sh"]
